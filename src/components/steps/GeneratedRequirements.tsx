@@ -32,20 +32,24 @@ interface ComplianceItem {
 }
 
 interface RoleData {
-  ROLE_NAME: string;
+  ROLE_NAME?: string;
   TOOLS?: ToolItem[];
   TECHNOLOGIES?: ToolItem[];
   COMPLIANCES?: ComplianceItem[];
   TASKS?: string[];
   SKILLS?: string[];
+  id?: string; // Added for API updates
+  _id?: string; // Added for API updates
 }
 
 interface GeneratedRequirementsProps {
   onNext?: () => void;
   onBack?: () => void;
+  selectedRoleId?: string;
+  selectedRoleName?: string;
 }
 
-const GeneratedRequirements = ({ onNext, onBack }: GeneratedRequirementsProps) => {
+const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleName }: GeneratedRequirementsProps) => {
   const [isGenerating, setIsGenerating] = useState(true);
   const [roleData, setRoleData] = useState<RoleData | null>(null);
   const [responsibilities, setResponsibilities] = useState<string[]>([]);
@@ -57,84 +61,71 @@ const GeneratedRequirements = ({ onNext, onBack }: GeneratedRequirementsProps) =
   const [requirementsSource, setRequirementsSource] = useState<'uploaded_document' | 'defined' | null>(null);
   const [editingTool, setEditingTool] = useState<{index: number, type: 'Tool' | 'Technology'} | null>(null);
   const [editingCompliance, setEditingCompliance] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load role data from localStorage or props
-    const loadRoleData = () => {
+    // Only use localStorage for requirementsSource, uploadedDocumentId, and selectedRoleId
+    const loadRoleData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const storedRole = localStorage.getItem('selectedRole');
         const storedSource = localStorage.getItem('requirementsSource') as 'uploaded_document' | 'defined' | null;
+        const storedDocumentId = localStorage.getItem('uploadedDocumentId');
+        const storedRoleId = localStorage.getItem('selectedRoleId');
         setRequirementsSource(storedSource);
-        
-        if (storedRole) {
-          const parsedRole = JSON.parse(storedRole);
-          setRoleData(parsedRole);
-          setResponsibilities(parsedRole.TASKS || []);
-          setEligibility(parsedRole.SKILLS || []);
-          setResponsibilityText((parsedRole.TASKS || []).join('\n'));
-          setEligibilityText((parsedRole.SKILLS || []).join('\n'));
-        } else {
-          // Fallback data when no role is selected
-          const fallbackRole = {
-            ROLE_NAME: "Data Scientist",
-            TOOLS: [
-              { name: "Python", priority: "High" as const, type: "Tool" as const },
-              { name: "R", priority: "High" as const, type: "Tool" as const },
-              { name: "SQL", priority: "High" as const, type: "Tool" as const },
-              { name: "Jupyter Notebook", priority: "Medium" as const, type: "Tool" as const },
-              { name: "Git", priority: "Medium" as const, type: "Tool" as const },
-              { name: "Docker", priority: "Low" as const, type: "Tool" as const },
-              { name: "Tableau", priority: "Medium" as const, type: "Tool" as const },
-              { name: "Power BI", priority: "Low" as const, type: "Tool" as const }
-            ],
-            TECHNOLOGIES: [
-              { name: "Machine Learning", priority: "High" as const, type: "Technology" as const },
-              { name: "Deep Learning", priority: "High" as const, type: "Technology" as const },
-              { name: "Natural Language Processing", priority: "Medium" as const, type: "Technology" as const },
-              { name: "Computer Vision", priority: "Medium" as const, type: "Technology" as const },
-              { name: "Statistical Analysis", priority: "High" as const, type: "Technology" as const },
-              { name: "Data Mining", priority: "Medium" as const, type: "Technology" as const },
-              { name: "Big Data Processing", priority: "Low" as const, type: "Technology" as const },
-              { name: "Cloud Computing", priority: "Medium" as const, type: "Technology" as const }
-            ],
-            COMPLIANCES: [
-              { name: "GDPR", priority: "High" as const },
-              { name: "CCPA", priority: "High" as const },
-              { name: "Data Privacy Regulations", priority: "High" as const },
-              { name: "Ethical AI Guidelines", priority: "Medium" as const },
-              { name: "HIPAA (if healthcare)", priority: "Medium" as const },
-              { name: "SOX (if financial)", priority: "Medium" as const },
-              { name: "ISO 27001", priority: "Low" as const }
-            ],
-            TASKS: [
-              "Analyze complex datasets to extract meaningful insights",
-              "Develop and implement machine learning models",
-              "Create data visualizations and reports",
-              "Collaborate with cross-functional teams",
-              "Present findings to stakeholders"
-            ],
-            SKILLS: [
-              "Bachelor's degree in Data Science, Statistics, or related field",
-              "3+ years of experience in data analysis",
-              "Strong programming skills in Python/R",
-              "Experience with machine learning frameworks",
-              "Excellent communication skills"
-            ]
-          };
-          setRoleData(fallbackRole);
-          setResponsibilities(fallbackRole.TASKS);
-          setEligibility(fallbackRole.SKILLS);
-          setResponsibilityText(fallbackRole.TASKS.join('\n'));
-          setEligibilityText(fallbackRole.SKILLS.join('\n'));
-          
-          // Set default source if not already set
-          if (!storedSource) {
-            setRequirementsSource('defined');
-            localStorage.setItem('requirementsSource', 'defined');
+
+        if (storedSource === 'uploaded_document' && storedDocumentId) {
+          try {
+            const response = await fetch(`http://localhost:3000/api/v1/upload-requirements/document/${storedDocumentId}`);
+            if (response.ok) {
+              const profileData = await response.json();
+              setRoleData(profileData);
+              setResponsibilities(profileData.TASKS || []);
+              setEligibility(profileData.SKILLS || []);
+              setResponsibilityText((profileData.TASKS || []).join('\n'));
+              setEligibilityText((profileData.SKILLS || []).join('\n'));
+              setLoading(false);
+              return;
+            } else {
+              setError('Failed to fetch requirements from uploaded document.');
+            }
+          } catch (error) {
+            setError('Error fetching requirement profiles by document.');
+            console.error('Error fetching requirement profiles by document:', error);
           }
+        } else if (storedSource === 'defined' && storedRoleId) {
+          try {
+            const response = await fetch(`http://localhost:3000/api/v1/roles/${storedRoleId}`);
+            if (response.ok) {
+              const profileData = await response.json();
+              setRoleData(profileData);
+              setResponsibilities(profileData.TASKS || []);
+              setEligibility(profileData.SKILLS || []);
+              setResponsibilityText((profileData.TASKS || []).join('\n'));
+              setEligibilityText((profileData.SKILLS || []).join('\n'));
+              setLoading(false);
+              return;
+            } else {
+              setError('Failed to fetch requirements for selected role.');
+            }
+          } catch (error) {
+            setError('Error fetching requirement profiles by role.');
+            console.error('Error fetching requirement profiles by role:', error);
+          }
+        } else {
+          // If neither, clear data
+          setRoleData(null);
+          setResponsibilities([]);
+          setEligibility([]);
+          setResponsibilityText('');
+          setEligibilityText('');
+          setLoading(false);
         }
       } catch (error) {
+        setError('Error loading role data.');
         console.error('Error loading role data:', error);
+        setLoading(false);
       }
     };
 
@@ -167,113 +158,126 @@ const GeneratedRequirements = ({ onNext, onBack }: GeneratedRequirementsProps) =
     }
   };
 
-  const saveResponsibilities = () => {
+  const saveResponsibilities = async () => {
+    if (!roleData) return;
     const newResponsibilities = responsibilityText.split('\n').filter(item => item.trim() !== '');
     setResponsibilities(newResponsibilities);
-    // Save to localStorage
-    const updatedRole = { ...roleData, TASKS: newResponsibilities };
-    localStorage.setItem('selectedRole', JSON.stringify(updatedRole));
-    setRoleData(updatedRole);
+    // Update via API
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/requirement-profiles/${roleData.id || roleData._id || ''}/tasks`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ TASKS: newResponsibilities })
+      });
+      if (response.ok) {
+        const updated = { ...roleData, TASKS: newResponsibilities };
+        setRoleData(updated);
+      }
+    } catch (error) {
+      console.error('Failed to update responsibilities:', error);
+    }
   };
 
-  const saveEligibility = () => {
+  const saveEligibility = async () => {
+    if (!roleData) return;
     const newEligibility = eligibilityText.split('\n').filter(item => item.trim() !== '');
     setEligibility(newEligibility);
-    // Save to localStorage
-    const updatedRole = { ...roleData, SKILLS: newEligibility };
-    localStorage.setItem('selectedRole', JSON.stringify(updatedRole));
-    setRoleData(updatedRole);
+    // Update via API
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/requirement-profiles/${roleData.id || roleData._id || ''}/skills`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ SKILLS: newEligibility })
+      });
+      if (response.ok) {
+        const updated = { ...roleData, SKILLS: newEligibility };
+        setRoleData(updated);
+      }
+    } catch (error) {
+      console.error('Failed to update eligibility:', error);
+    }
   };
 
+  // Remove all add/update/remove API calls for tools, technologies, and compliance
+  // Only update state locally for these sections
+
+  // Add Tool/Technology locally
   const addNewTool = () => {
-    if (newToolItem.name.trim() === '') return;
-    
+    if (newToolItem.name.trim() === '' || !roleData) return;
     const newTool: ToolItem = {
       name: newToolItem.name,
       priority: newToolItem.priority as 'High' | 'Medium' | 'Low',
       type: newToolItem.type as 'Tool' | 'Technology'
     };
-
     const updatedRole = {
       ...roleData,
       [newToolItem.type === 'Tool' ? 'TOOLS' : 'TECHNOLOGIES']: [
-        ...(newToolItem.type === 'Tool' ? (roleData?.TOOLS || []) : (roleData?.TECHNOLOGIES || [])),
+        ...(newToolItem.type === 'Tool' ? (roleData.TOOLS || []) : (roleData.TECHNOLOGIES || [])),
         newTool
       ]
     };
-
     setRoleData(updatedRole);
-    localStorage.setItem('selectedRole', JSON.stringify(updatedRole));
     setNewToolItem({ name: '', priority: 'High', type: 'Tool' });
   };
 
+  // Remove Tool/Technology locally
+  const removeTool = (index: number, type: 'Tool' | 'Technology') => {
+    if (!roleData) return;
+    const updatedRole = {
+      ...roleData,
+      [type === 'Tool' ? 'TOOLS' : 'TECHNOLOGIES']: (type === 'Tool' ? roleData.TOOLS : roleData.TECHNOLOGIES)?.filter((_, i) => i !== index) || []
+    };
+    setRoleData(updatedRole);
+  };
+
+  // Update Tool/Technology locally
+  const updateTool = (index: number, type: 'Tool' | 'Technology', updatedTool: ToolItem) => {
+    if (!roleData) return;
+    const updatedRole = {
+      ...roleData,
+      [type === 'Tool' ? 'TOOLS' : 'TECHNOLOGIES']: (type === 'Tool' ? roleData.TOOLS : roleData.TECHNOLOGIES)?.map((item, i) => i === index ? updatedTool : item) || []
+    };
+    setRoleData(updatedRole);
+    setEditingTool(null);
+  };
+
+  // Add Compliance locally
   const addNewCompliance = () => {
-    if (newComplianceItem.name.trim() === '') return;
-    
+    if (newComplianceItem.name.trim() === '' || !roleData) return;
     const newCompliance: ComplianceItem = {
       name: newComplianceItem.name,
       priority: newComplianceItem.priority as 'High' | 'Medium' | 'Low'
     };
-
     const updatedRole = {
       ...roleData,
-      COMPLIANCES: [...(roleData?.COMPLIANCES || []), newCompliance]
+      COMPLIANCES: [...(roleData.COMPLIANCES || []), newCompliance]
     };
-
     setRoleData(updatedRole);
-    localStorage.setItem('selectedRole', JSON.stringify(updatedRole));
     setNewComplianceItem({ name: '', priority: 'High' });
   };
 
-  const removeTool = (index: number, type: 'Tool' | 'Technology') => {
-    const updatedRole = {
-      ...roleData,
-      [type === 'Tool' ? 'TOOLS' : 'TECHNOLOGIES']: 
-        (type === 'Tool' ? roleData?.TOOLS : roleData?.TECHNOLOGIES)?.filter((_, i) => i !== index) || []
-    };
-
-    setRoleData(updatedRole);
-    localStorage.setItem('selectedRole', JSON.stringify(updatedRole));
-  };
-
+  // Remove Compliance locally
   const removeCompliance = (index: number) => {
+    if (!roleData) return;
     const updatedRole = {
       ...roleData,
-      COMPLIANCES: roleData?.COMPLIANCES?.filter((_, i) => i !== index) || []
+      COMPLIANCES: roleData.COMPLIANCES?.filter((_, i) => i !== index) || []
     };
-
     setRoleData(updatedRole);
-    localStorage.setItem('selectedRole', JSON.stringify(updatedRole));
   };
 
-  const updateTool = (index: number, type: 'Tool' | 'Technology', updatedTool: ToolItem) => {
-    const updatedRole = {
-      ...roleData,
-      [type === 'Tool' ? 'TOOLS' : 'TECHNOLOGIES']: 
-        (type === 'Tool' ? roleData?.TOOLS : roleData?.TECHNOLOGIES)?.map((item, i) => 
-          i === index ? updatedTool : item
-        ) || []
-    };
-
-    setRoleData(updatedRole);
-    localStorage.setItem('selectedRole', JSON.stringify(updatedRole));
-    setEditingTool(null);
-  };
-
+  // Update Compliance locally
   const updateCompliance = (index: number, updatedCompliance: ComplianceItem) => {
+    if (!roleData) return;
     const updatedRole = {
       ...roleData,
-      COMPLIANCES: roleData?.COMPLIANCES?.map((item, i) => 
-        i === index ? updatedCompliance : item
-      ) || []
+      COMPLIANCES: roleData.COMPLIANCES?.map((item, i) => i === index ? updatedCompliance : item) || []
     };
-
     setRoleData(updatedRole);
-    localStorage.setItem('selectedRole', JSON.stringify(updatedRole));
     setEditingCompliance(null);
   };
 
-  if (isGenerating) {
+  if (isGenerating || loading) {
     return (
       <div className="max-w-7xl mx-auto">
         
@@ -318,6 +322,25 @@ const GeneratedRequirements = ({ onNext, onBack }: GeneratedRequirementsProps) =
     );
   }
 
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center py-20">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              variant="outline"
+              className="text-red-600 border-red-300 hover:bg-red-50"
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
@@ -329,7 +352,9 @@ const GeneratedRequirements = ({ onNext, onBack }: GeneratedRequirementsProps) =
           <FileText className="w-8 h-8 text-white" />
         </div>
         <h1 className="text-5xl font-bold text-gray-900 mb-4">
-          Role Requirements for <span className="modern-blue">{roleData?.ROLE_NAME || 'Selected Role'}</span>
+          Role Requirements for <span className="modern-blue">
+            {roleData?.ROLE_NAME || localStorage.getItem('selectedRoleName') || 'Selected Role'}
+          </span>
         </h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-4">
           Comprehensive skill requirements and responsibilities framework

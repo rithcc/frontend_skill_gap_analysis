@@ -36,20 +36,54 @@ const Index = () => {
     "4:00 PM - 5:00 PM"
   ];
 
-  const handleScheduleSubmit = (e: React.FormEvent) => {
+  // const handleScheduleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   // Here you would typically send the form data to your backend
+  //   console.log('Schedule demo request:', scheduleForm);
+  //   alert('Demo scheduled successfully! We will contact you soon.');
+  //   setShowScheduleDemo(false);
+  //   setScheduleForm({
+  //     name: '',
+  //     email: '',
+  //     company: '',
+  //     phone: '',
+  //     preferredTime: '',
+  //     message: ''
+  //   });
+  // };
+
+   const handleScheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically send the form data to your backend
-    console.log('Schedule demo request:', scheduleForm);
-    alert('Demo scheduled successfully! We will contact you soon.');
-    setShowScheduleDemo(false);
-    setScheduleForm({
-      name: '',
-      email: '',
-      company: '',
-      phone: '',
-      preferredTime: '',
-      message: ''
-    });
+
+    try {
+      const response = await fetch("http://localhost:3000/api/v1/schedule-demo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(scheduleForm),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to schedule demo");
+      }
+
+      const result = await response.json();
+      alert("Demo scheduled successfully!");
+      console.log("Demo scheduled:", result);
+
+      setScheduleForm({
+        name: "",
+        email: "",
+        company: "",
+        phone: "",
+        preferredTime: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Something went wrong. Please try again.");
+    }
   };
 
   const strategicPaths = [

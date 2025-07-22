@@ -8,6 +8,23 @@ import { ArrowLeft, Settings } from "lucide-react";
 interface RequirementsBuilderProps {
   onNext?: () => void;
   onBack?: () => void;
+  selectedRoleId?: string;
+  selectedRoleName?: string;
+}
+
+interface RequirementProfile {
+  id?: string;
+  skillExperience: number;
+  skillCompetence: string;
+  timeline: number;
+  budget: number;
+  technicalLevel: number;
+  domainLevel: number;
+  processLevel: number;
+  managerialLevel: number;
+  collaborationLevel: number;
+  documentId?: string;
+  roleId?: string;
 }
 
 // 🔹 Labels
@@ -15,9 +32,9 @@ const experienceLabels = ['Entry (0-1y)', 'Junior (1-3y)', 'Mid (3-5y)', 'Senior
 const competenceLabels = ['Basic', 'Working', 'Proficient', 'Advanced', 'Expert'];
 
 // 🔹 Main Component
-export default function RequirementsBuilder({ onNext, onBack }: RequirementsBuilderProps) {
+export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, selectedRoleName }: RequirementsBuilderProps) {
   console.log('RequirementsBuilder rendering...', { onNext, onBack });
-  
+
   // State management
   const [skillExperience, setSkillExperience] = useState<number>(2);
   const [skillCompetence, setSkillCompetence] = useState('Proficient');
@@ -30,28 +47,178 @@ export default function RequirementsBuilder({ onNext, onBack }: RequirementsBuil
   const [collaborationLevel, setCollaborationLevel] = useState(3);
   const [hasError, setHasError] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [requirementProfileId, setRequirementProfileId] = useState<string | null>(null);
+  const [requirementsSource, setRequirementsSource] = useState<'manual' | 'uploaded_document'>('manual');
 
   // Effects
   useEffect(() => { window.scrollTo(0, 0); }, []);
-  
+
+  // Load data from localStorage and fetch from backend if needed
   useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      console.error('RequirementsBuilder Error:', event.error);
-      setHasError(true);
-      setError(event.error);
+    const loadRequirements = async () => {
+      setIsLoading(true);
+      try {
+        // Check localStorage for requirements source and data
+        const storedData = localStorage.getItem('selectedRole');
+        const requirementsSource = localStorage.getItem('requirementsSource');
+        const parsedData = storedData ? JSON.parse(storedData) : null;
+        
+        console.log('Stored data:', parsedData);
+        console.log('Requirements source:', requirementsSource);
+        
+        // Handle document upload flow
+        if (requirementsSource === 'uploaded_document' && parsedData?.documentId) {
+          setRequirementsSource('uploaded_document');
+          console.log('Loading requirements from uploaded document:', parsedData.documentId);
+          
+          // Fetch requirement profile by document ID
+          console.log('Making API request to:', `/api/v1/requirement-profiles?documentId=${parsedData.documentId}`);
+          const response = await fetch(`/api/v1/requirement-profiles?documentId=${parsedData.documentId}`);
+          console.log('API Response status:', response.status, response.statusText);
+          if (response.ok) {
+            const profiles = await response.json();
+            if (profiles.length > 0) {
+              const profile = profiles[0]; // Take the first matching profile
+              setRequirementProfileId(profile.id);
+              setSkillExperience(profile.skillExperience || 2);
+              setSkillCompetence(profile.skillCompetence || 'Proficient');
+              setTimeline(profile.timeline || 6);
+              setBudget(profile.budget || 25000);
+              setTechnicalLevel(profile.technicalLevel || 3);
+              setDomainLevel(profile.domainLevel || 4);
+              setProcessLevel(profile.processLevel || 2);
+              setManagerialLevel(profile.managerialLevel || 1);
+              setCollaborationLevel(profile.collaborationLevel || 3);
+              console.log('Loaded requirement profile from backend:', profile);
+            } else {
+              console.log('No requirement profile found for document ID:', parsedData.documentId);
+              // Set default values for document upload scenario without existing profile
+              setSkillExperience(2);
+              setSkillCompetence('Proficient');
+              setTimeline(6);
+              setBudget(25000);
+              setTechnicalLevel(3);
+              setDomainLevel(4);
+              setProcessLevel(2);
+              setManagerialLevel(1);
+              setCollaborationLevel(3);
+            }
+          } else {
+            console.error('Failed to fetch requirement profile:', response.statusText);
+          }
+        }
+        // Handle manual role selection flow  
+        else if (parsedData?.roleId && parsedData?.roleName) {
+          setRequirementsSource('manual');
+          console.log('Manual requirements mode for role:', parsedData.roleName);
+          
+          // Try to fetch existing requirements for this role if any
+          try {
+            const response = await fetch(`/api/v1/requirement-profiles?roleId=${parsedData.roleId}`);
+            if (response.ok) {
+              const profiles = await response.json();
+              if (profiles.length > 0) {
+                const profile = profiles[0];
+                setRequirementProfileId(profile.id);
+                setSkillExperience(profile.skillExperience || 2);
+                setSkillCompetence(profile.skillCompetence || 'Proficient');
+                setTimeline(profile.timeline || 6);
+                setBudget(profile.budget || 25000);
+                setTechnicalLevel(profile.technicalLevel || 3);
+                setDomainLevel(profile.domainLevel || 4);
+                setProcessLevel(profile.processLevel || 2);
+                setManagerialLevel(profile.managerialLevel || 1);
+                setCollaborationLevel(profile.collaborationLevel || 3);
+                console.log('Loaded existing requirement profile for role:', profile);
+              }
+            }
+          } catch (err) {
+            console.log('No existing requirements found for this role, using defaults');
+          }
+        }
+        else {
+          setRequirementsSource('manual');
+          console.log('Default manual requirements mode');
+        }
+      } catch (err) {
+        console.error('Failed to load requirements:', err);
+        setError(err instanceof Error ? err : new Error('Failed to load requirements'));
+      } finally {
+        setIsLoading(false);
+      }
     };
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error('RequirementsBuilder Promise Rejection:', event.reason);
-      setHasError(true);
-      setError(new Error(event.reason));
-    };
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
-    return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-    };
+
+    loadRequirements();
   }, []);
+
+
+  // Save requirement profile to backend
+  const saveRequirementProfile = async () => {
+    setIsSaving(true);
+    try {
+      const storedData = localStorage.getItem('selectedRole');
+      const parsedData = storedData ? JSON.parse(storedData) : null;
+      
+      const profileData: RequirementProfile = {
+        skillExperience,
+        skillCompetence,
+        timeline,
+        budget,
+        technicalLevel,
+        domainLevel,
+        processLevel,
+        managerialLevel,
+        collaborationLevel,
+        documentId: parsedData?.documentId || undefined,
+        roleId: parsedData?.roleId || selectedRoleId || undefined
+      };
+
+      let response;
+      if (requirementProfileId) {
+        // Update existing profile
+        console.log('Updating existing profile:', requirementProfileId, profileData);
+        response = await fetch(`/api/v1/requirement-profiles/${requirementProfileId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(profileData),
+        });
+      } else {
+        // Create new profile
+        console.log('Creating new profile:', profileData);
+        response = await fetch('/api/v1/requirement-profiles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(profileData),
+        });
+      }
+      console.log('Save response status:', response.status, response.statusText);
+
+      if (response.ok) {
+        const savedProfile = await response.json();
+        setRequirementProfileId(savedProfile.id);
+        console.log('Requirement profile saved successfully:', savedProfile);
+        
+        // Update localStorage with the saved profile ID
+        if (parsedData) {
+          parsedData.requirementProfileId = savedProfile.id;
+          localStorage.setItem('selectedRole', JSON.stringify(parsedData));
+        }
+      } else {
+        throw new Error(`Failed to save requirement profile: ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error('Failed to save requirement profile:', err);
+      setError(err instanceof Error ? err : new Error('Failed to save requirement profile'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Error boundary handler
   if (hasError) {
@@ -95,6 +262,33 @@ export default function RequirementsBuilder({ onNext, onBack }: RequirementsBuil
     );
   }
 
+  // Debug logging for props
+  console.log('RequirementsBuilder props:', {
+    selectedRoleId,
+    selectedRoleName,
+    requirementsSource,
+    document
+  });
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-lg">
+          <CardHeader>
+            <CardTitle>Loading Requirements...</CardTitle>
+            <CardDescription>
+              {requirementsSource === 'uploaded_document' ? 'Fetching data from uploaded document' : 'Preparing requirement builder'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
       <div className="max-w-7xl mx-auto">
@@ -115,10 +309,52 @@ export default function RequirementsBuilder({ onNext, onBack }: RequirementsBuil
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                   Requirements Builder
+                  {(() => {
+                    // Get role name from props, localStorage, or extracted document data
+                    const storedData = localStorage.getItem('selectedRole');
+                    const parsedData = storedData ? JSON.parse(storedData) : null;
+                    
+                    const displayRoleName = selectedRoleName || 
+                                          parsedData?.roleName || 
+                                          parsedData?.roleTitle || 
+                                          parsedData?.ROLE_NAME || 
+                                          null;
+                    
+                    return displayRoleName ? (
+                      <span className="text-base font-normal ml-3 text-gray-500">
+                        for {displayRoleName}
+                      </span>
+                    ) : null;
+                  })()}
                 </h1>
                 <p className="text-gray-600 mt-2">
-                  Define your skill requirements and experience levels
+                  {(() => {
+                    // Get role name for display
+                    const storedData = localStorage.getItem('selectedRole');
+                    const parsedData = storedData ? JSON.parse(storedData) : null;
+                    
+                    const displayRoleName = selectedRoleName || 
+                                          parsedData?.roleName || 
+                                          parsedData?.roleTitle || 
+                                          parsedData?.ROLE_NAME || 
+                                          null;
+                    
+                    return displayRoleName ? (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mr-3">
+                        🎯 {displayRoleName}
+                      </span>
+                    ) : null;
+                  })()}
+                  {requirementsSource === 'uploaded_document' 
+                    ? 'Review and edit requirements extracted from your document'
+                    : 'Define your skill requirements and experience levels'
+                  }
                 </p>
+                {requirementsSource === 'uploaded_document' && (
+                  <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    📄 Requirements loaded from uploaded document
+                  </div>
+                )}
               </div>
             </div>
             <Button variant="outline" className="flex items-center gap-2">
@@ -343,8 +579,22 @@ export default function RequirementsBuilder({ onNext, onBack }: RequirementsBuil
                     Continue to Analysis
                     <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
                   </Button>
-                  <Button variant="outline" className="flex-1 hover:bg-gray-50 transition-all duration-200">
-                    💾 Save Draft
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 hover:bg-gray-50 transition-all duration-200"
+                    onClick={saveRequirementProfile}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        💾 {requirementProfileId ? 'Update Profile' : 'Save Draft'}
+                      </>
+                    )}
                   </Button>
                   <Button variant="outline" className="flex-1 hover:bg-gray-50 transition-all duration-200">
                     📄 Export Settings

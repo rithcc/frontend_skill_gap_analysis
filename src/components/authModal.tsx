@@ -1,12 +1,32 @@
-
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Mail, Lock, User, Building2, Globe, AlertCircle } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  Building2,
+  Globe,
+  AlertCircle,
+} from "lucide-react";
+import axios from "axios";
 
 interface AuthModalProps {
   open: boolean;
@@ -22,33 +42,100 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("signin");
 
-  const domains = [
-    { value: "creamcollar.com", label: "CreamCollar" }
-  ];
+  const domains = [{ value: "creamcollar.com", label: "CreamCollar" }];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+  //   setError("");
 
-    const formData = new FormData(e.target as HTMLFormElement);
-    const email = formData.get("email") as string;
-    const domain = selectedDomain || "creamcollar.com";
+  //   const formData = new FormData(e.target as HTMLFormElement);
+  //   const email = formData.get("email") as string;
+  //   const domain = selectedDomain || "creamcollar.com";
 
-    // Extract domain from email and check if it matches CreamCollar domain
-    const emailDomain = email.split("@")[1];
-    if (emailDomain !== domain) {
-      setError(`Email domain must be @${domain}`);
-      setIsLoading(false);
-      return;
+  //   // Extract domain from email and check if it matches CreamCollar domain
+  //   const emailDomain = email.split("@")[1];
+  //   if (emailDomain !== domain) {
+  //     setError(`Email domain must be @${domain}`);
+  //     setIsLoading(false);
+  //     return;
+  //   }
+
+  //   // Simulate authentication
+  //   setTimeout(() => {
+  //     setIsLoading(false);
+  //     onAuthenticated();
+  //   }, 1500);
+  // };
+
+ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError("");
+
+  const form = e.currentTarget;
+  const formData = new FormData(form);
+
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+  const domain = selectedDomain || "creamcollar.com";
+
+  if (!email || !password) {
+    setError("Email and password are required");
+    setIsLoading(false);
+    return;
+  }
+
+  const emailDomain = email.split("@")[1];
+  if (emailDomain !== domain) {
+    setError(`Email domain must be @${domain}`);
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    if (activeTab === "signin") {
+      const response = await axios.post("http://localhost:3000/api/v1/user/login", {
+        email,
+        password,
+      });
+
+      console.log("Login success:", response.data);
+      onAuthenticated();
     }
 
-    // Simulate authentication
-    setTimeout(() => {
-      setIsLoading(false);
+    if (activeTab === "signup") {
+      const firstName = formData.get("firstName") as string;
+      const lastName = formData.get("lastName") as string;
+      const company = formData.get("company") as string;
+
+      if (!firstName || !lastName || !company) {
+        setError("All fields are required for signup");
+        return;
+      }
+
+      const response = await axios.post("http://localhost:3000/api/v1/user/signup", {
+        firstName,
+        lastName,
+        company,
+        email,
+        password,
+      });
+
+      console.log("Signup success:", response.data);
       onAuthenticated();
-    }, 1500);
-  };
+    }
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      setError(err.response?.data?.message || "Request failed");
+    } else {
+      console.error("Unexpected error:", err);
+      setError("An unexpected error occurred");
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Show logo only in signin tab and only after domain is selected
   const showLogo = activeTab === "signin" && selectedDomain;
@@ -60,9 +147,9 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
         {showLogo && (
           <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-8 text-center">
             <div className="flex items-center justify-center mb-4">
-              <img 
-                src="https://wemxiqpkiyrwpffrdrgu.supabase.co/storage/v1/object/public/public-assets/projects/f9d831a1-39a0-40f2-911a-7ff7fcaa984b/684a6670-0774-4d17-94fa-d275c895f47a.png" 
-                alt="CreamCollar - Crafting Futures" 
+              <img
+                src="https://wemxiqpkiyrwpffrdrgu.supabase.co/storage/v1/object/public/public-assets/projects/f9d831a1-39a0-40f2-911a-7ff7fcaa984b/684a6670-0774-4d17-94fa-d275c895f47a.png"
+                alt="CreamCollar - Crafting Futures"
                 className="h-12 w-auto"
               />
             </div>
@@ -97,15 +184,19 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
         )}
 
         <div className="p-8">
-          <Tabs defaultValue="signin" className="w-full" onValueChange={setActiveTab}>
+          <Tabs
+            defaultValue="signin"
+            className="w-full"
+            onValueChange={setActiveTab}
+          >
             <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100">
-              <TabsTrigger 
-                value="signin" 
+              <TabsTrigger
+                value="signin"
                 className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
               >
                 Sign In
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="signup"
                 className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
               >
@@ -123,10 +214,15 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
             <TabsContent value="signin">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="domain" className="text-gray-700 font-medium">Organization Domain</Label>
+                  <Label htmlFor="domain" className="text-gray-700 font-medium">
+                    Organization Domain
+                  </Label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Select value={selectedDomain} onValueChange={setSelectedDomain}>
+                    <Select
+                      value={selectedDomain}
+                      onValueChange={setSelectedDomain}
+                    >
                       <SelectTrigger className="pl-10 border-gray-300 focus:border-blue-500">
                         <SelectValue placeholder="Select your organization domain" />
                       </SelectTrigger>
@@ -145,7 +241,12 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
                 {selectedDomain && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-gray-700 font-medium">Email</Label>
+                      <Label
+                        htmlFor="email"
+                        className="text-gray-700 font-medium"
+                      >
+                        Email
+                      </Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
@@ -160,7 +261,12 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
+                      <Label
+                        htmlFor="password"
+                        className="text-gray-700 font-medium"
+                      >
+                        Password
+                      </Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
@@ -178,13 +284,17 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
                           className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-600"
                           onClick={() => setShowPassword(!showPassword)}
                         >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </div>
 
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold"
                       disabled={isLoading}
                     >
@@ -206,7 +316,12 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-gray-700 font-medium">First Name</Label>
+                    <Label
+                      htmlFor="firstName"
+                      className="text-gray-700 font-medium"
+                    >
+                      First Name
+                    </Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
@@ -219,7 +334,12 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-gray-700 font-medium">Last Name</Label>
+                    <Label
+                      htmlFor="lastName"
+                      className="text-gray-700 font-medium"
+                    >
+                      Last Name
+                    </Label>
                     <Input
                       id="lastName"
                       name="lastName"
@@ -231,7 +351,12 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="company" className="text-gray-700 font-medium">Company</Label>
+                  <Label
+                    htmlFor="company"
+                    className="text-gray-700 font-medium"
+                  >
+                    Company
+                  </Label>
                   <div className="relative">
                     <Building2 className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
@@ -245,7 +370,12 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signupEmail" className="text-gray-700 font-medium">Email</Label>
+                  <Label
+                    htmlFor="signupEmail"
+                    className="text-gray-700 font-medium"
+                  >
+                    Email
+                  </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
@@ -260,7 +390,12 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signupPassword" className="text-gray-700 font-medium">Password</Label>
+                  <Label
+                    htmlFor="signupPassword"
+                    className="text-gray-700 font-medium"
+                  >
+                    Password
+                  </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
@@ -278,13 +413,17 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 hover:text-gray-600"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold"
                   disabled={isLoading}
                 >
@@ -304,9 +443,13 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
           <div className="mt-8 text-center">
             <p className="text-xs text-gray-500">
               By continuing, you agree to our{" "}
-              <span className="text-blue-600 hover:underline cursor-pointer">Terms of Service</span>
-              {" "}and{" "}
-              <span className="text-blue-600 hover:underline cursor-pointer">Privacy Policy</span>
+              <span className="text-blue-600 hover:underline cursor-pointer">
+                Terms of Service
+              </span>{" "}
+              and{" "}
+              <span className="text-blue-600 hover:underline cursor-pointer">
+                Privacy Policy
+              </span>
             </p>
           </div>
         </div>

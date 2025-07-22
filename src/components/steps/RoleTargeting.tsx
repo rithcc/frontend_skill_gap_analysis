@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,70 +8,109 @@ import {
   Star,
   MapPin,
   Clock,
-  Cog // ✅ Import this icon
+  Cog,
+  Loader2
 } from "lucide-react";
+
+// Interface for the API response
+interface Technology {
+  id: string;
+  name: string;
+}
+
+interface Role {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  level: string;
+  location: string;
+  experience: string;
+  tags: string[];
+  technologies: Technology[];
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface RoleTargetingProps {
   selectedRole: string | null;
-  onSelectRole: (role: string) => void;
+  onSelectRole: (roleId: string, roleTitle: string) => void;
   onRequirementChoice?: (choice: 'have' | 'define') => void;
 }
 
 const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice }: RoleTargetingProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [hasRequirements, setHasRequirements] = useState<boolean | null>(null); // ✅ Define this state
+  const [hasRequirements, setHasRequirements] = useState<boolean | null>(null);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const roles = [
-    {
-      id: "adas-ml-engineer",
-      title: "ADAS AI/ML Engineer",
-      category: "Engineering",
-      description: "The ADAS AI/ML Engineer develops and implements deep learning solutions for advanced driver-assistance systems...",
-      technologies: ["Linux", "Deep Learning", "Reinforcement Learning", "Python", "PyTorch"],
-      level: "Senior (5+ years)",
-      location: "Remote/Hybrid",
-      experience: "+7 years",
-      tags: ["ADAS", "Junior"]
-    },
-    {
-      id: "senior-frontend-developer",
-      title: "Senior Frontend Developer",
-      category: "Engineering",
-      description: "Lead frontend development using modern frameworks like React...",
-      technologies: ["React", "TypeScript", "Next.js", "Tailwind CSS", "GraphQL"],
-      level: "Senior (5+ years)",
-      location: "Remote/On-site",
-      experience: "+5 years",
-      tags: ["Frontend", "Senior"]
-    },
-    {
-      id: "data-scientist",
-      title: "Data Scientist",
-      category: "Data & Analytics",
-      description: "Extract insights from complex datasets using statistical analysis and machine learning...",
-      technologies: ["Python", "R", "SQL", "TensorFlow", "Pandas"],
-      level: "Mid-level (3-5 years)",
-      location: "Remote/Hybrid",
-      experience: "+3 years",
-      tags: ["ML", "Analytics"]
-    },
-    {
-      id: "product-manager",
-      title: "Product Manager",
-      category: "Product & Design",
-      description: "Drive product strategy and roadmap development...",
-      technologies: ["Figma", "Jira", "Analytics", "User Research", "Agile"],
-      level: "Mid-level (3-5 years)",
-      location: "On-site/Hybrid",
-      experience: "+4 years",
-      tags: ["Product", "Strategy"]
-    }
-  ];
+  // Fetch roles from API
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
+        const response = await fetch("http://localhost:3000/api/v1/roles");
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setRoles(data);
+      } catch (err) {
+        console.error('Failed to fetch roles:', err);
+        setError('Failed to load roles. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoles();
+  }, []);
+
+  // Filter roles based on search term
   const filteredRoles = roles.filter(role =>
     role.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    role.technologies.some(tech => tech.toLowerCase().includes(searchTerm.toLowerCase()))
+    role.technologies.some(tech => tech.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    role.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+            <p className="text-gray-600">Loading roles...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center py-20">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              variant="outline"
+              className="text-red-600 border-red-300 hover:bg-red-50"
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -100,6 +139,28 @@ const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice }: Role
         </p>
       </div>
 
+      {/* No roles found */}
+      {filteredRoles.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <div className="bg-gray-50 rounded-lg p-8 max-w-md mx-auto">
+            <p className="text-gray-600 mb-4">
+              {searchTerm 
+                ? `No roles found matching "${searchTerm}"`
+                : "No roles available"
+              }
+            </p>
+            {searchTerm && (
+              <Button
+                onClick={() => setSearchTerm("")}
+                variant="outline"
+              >
+                Clear search
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Role Cards */}
       <div className="space-y-4">
         {filteredRoles.map((role) => (
@@ -110,7 +171,7 @@ const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice }: Role
                 ? 'border-l-blue-500 bg-blue-50 shadow-lg'
                 : 'border-l-gray-200 hover:border-l-blue-300 bg-white'
             }`}
-            onClick={() => onSelectRole(role.title)}
+            onClick={() => onSelectRole(role.id, role.title)}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -131,17 +192,6 @@ const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice }: Role
                 <p className="text-gray-600 mb-4 leading-relaxed">
                   {role.description}
                 </p>
-
-                {/* Technologies */}
-                <div className="mb-3">
-                  <div className="flex flex-wrap gap-2">
-                    {role.technologies.map((tech, index) => (
-                      <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                </div>
 
                 {/* Role Meta Info */}
                 <div className="flex items-center text-sm text-gray-500 space-x-6">
@@ -173,41 +223,43 @@ const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice }: Role
         ))}
       </div>
 
-      {/* Requirements Section */}
-      <Card className="p-8 bg-white border border-gray-200 shadow-lg mt-10">
-        <div className="text-center">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-6">
-            <Cog className="w-6 h-6 text-white" />
+      {/* Requirements Section - Only show if roles are available */}
+      {roles.length > 0 && (
+        <Card className="p-8 bg-white border border-gray-200 shadow-lg mt-10">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-6">
+              <Cog className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              Role Requirements
+            </h3>
+            <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+              Do you have existing requirements for this role, or would you like our AI to generate comprehensive requirements based on industry standards and future trends?
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+              <Button
+                variant={hasRequirements === true ? "default" : "outline"}
+                onClick={() => {
+                  setHasRequirements(true);
+                  onRequirementChoice?.('have');
+                }}
+              >
+                I have requirements
+              </Button>
+              <Button
+                variant={hasRequirements === false ? "default" : "outline"}
+                onClick={() => {
+                  setHasRequirements(false);
+                  onRequirementChoice?.('define');
+                }}
+              >
+                Define requirements
+              </Button>
+            </div>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Role Requirements
-          </h3>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Do you have existing requirements for this role, or would you like our AI to generate comprehensive requirements based on industry standards and future trends?
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-            <Button
-              variant={hasRequirements === true ? "default" : "outline"}
-              onClick={() => {
-                setHasRequirements(true);
-                onRequirementChoice?.('have');
-              }}
-            >
-              I have requirements
-            </Button>
-            <Button
-              variant={hasRequirements === false ? "default" : "outline"}
-              onClick={() => {
-                setHasRequirements(false);
-                onRequirementChoice?.('define');
-              }}
-            >
-              Define requirements
-            </Button>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      )}
     </div>
   );
 };
