@@ -26,41 +26,45 @@ export default function AnalysisProgress({ onNext, onBack }: AnalysisProgressPro
 
   // Simulate analysis progress for demo purposes
   useEffect(() => {
-    const simulateProgress = () => {
-      const intervals = [
-        { step: 1, delay: 500, message: 'Mapping tasks to skills...' },
-        { step: 2, delay: 1000, message: 'Classifying tasks by categories...' },
-        { step: 3, delay: 1500, message: 'Extracting skills from resume...' },
-        { step: 4, delay: 2000, message: 'Analyzing job description context...' },
-        { step: 5, delay: 2500, message: 'Clustering context tasks...' },
-        { step: 6, delay: 3000, message: 'Calculating task importance...' },
-        { step: 7, delay: 3500, message: 'Calculating skill competence...' },
-        { step: 8, delay: 4000, message: 'Conducting skill gap analysis...' },
-        { step: 9, delay: 4500, message: 'Generating final skill gap scores...' }
+    // API endpoints for each step
+      const apiBase = 'http://localhost:8001';
+      const apiEndpoints = [
+        { step: 1, url: `${apiBase}/task-to-skill-mapping`, message: 'Mapping tasks to skills...' },
+        { step: 2, url: `${apiBase}/classify-tasks`, message: 'Classifying tasks by categories...' },
+        { step: 3, url: `${apiBase}/skills-from-resume`, message: 'Extracting skills from resume...' },
+        { step: 4, url: `${apiBase}/jd-context`, message: 'Analyzing job description context...' },
+        { step: 5, url: `${apiBase}/cluster-context-tasks`, message: 'Clustering context tasks...' },
+        { step: 6, url: `${apiBase}/calculate-task-importance`, message: 'Calculating task importance...' },
+        { step: 7, url: `${apiBase}/calculate-skill-competence`, message: 'Calculating skill competence...' },
+        { step: 8, url: `${apiBase}/conduct-skill-gap-analysis`, message: 'Conducting skill gap analysis...' },
+        { step: 9, url: `${apiBase}/get-skill-gap-score`, message: 'Generating final skill gap scores...' }
       ];
 
-      intervals.forEach(({ step, delay, message }) => {
-        setTimeout(() => {
-          setCurrentStep(message);
-          setSteps(prev => prev.map(s => 
-            s.id === step ? { ...s, active: true } : { ...s, active: false }
-          ));
-          setProgress((step / 9) * 100);
-          
-          setTimeout(() => {
-            setSteps(prev => prev.map(s => 
-              s.id === step ? { ...s, completed: true, active: false } : s
-            ));
-            
-            if (step === 9) {
-              setCurrentStep('Analysis complete!');
-            }
-          }, 400);
-        }, delay);
-      });
+    let cancelled = false;
+
+    const runAnalysis = async () => {
+      for (let i = 0; i < apiEndpoints.length; i++) {
+        const { step, url, message } = apiEndpoints[i];
+        if (cancelled) break;
+        setCurrentStep(message);
+        setSteps(prev => prev.map(s => s.id === step ? { ...s, active: true } : { ...s, active: false }));
+        setProgress((step / 9) * 100);
+        try {
+          await fetch(url, { method: 'POST' });
+        } catch (err) {
+          // Optionally handle error (show error message, etc.)
+        }
+        setSteps(prev => prev.map(s => s.id === step ? { ...s, completed: true, active: false } : s));
+        if (step === 9) {
+          setCurrentStep('Analysis complete!');
+        }
+        // Small delay for UI smoothness
+        await new Promise(res => setTimeout(res, 400));
+      }
     };
 
-    simulateProgress();
+    runAnalysis();
+    return () => { cancelled = true; };
   }, []);
 
   return (
