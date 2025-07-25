@@ -11,7 +11,8 @@ import {
   UserCheck,
   Save,
   X,
-  Settings
+  Settings,
+  Loader2
 } from "lucide-react";
 
 interface RequirementItem {
@@ -49,6 +50,43 @@ interface GeneratedRequirementsProps {
   selectedRoleName?: string;
 }
 
+interface AIRoleRequirement {
+  description: string;
+  category?: string;
+  priority?: string;
+  details?: string;
+}
+
+interface AIEligibility {
+  description: string;
+  priority?: string;
+}
+
+interface AIToolTechnology {
+  name: string;
+  category: string;
+  priority?: string;
+  details?: string;
+}
+
+interface AICompliance {
+  name: string;
+  priority?: string;
+}
+
+interface AIRequirementsResponse {
+  responsibilities?: AIRoleRequirement[];
+  eligibility?: AIEligibility[];
+  tools_and_technologies?: AIToolTechnology[];
+  compliance?: AICompliance[];
+}
+
+const getInitialRequirementsSource = (): 'uploaded_document' | 'defined' | null => {
+  const value = localStorage.getItem('requirementsSource');
+  if (value === 'uploaded_document' || value === 'defined') return value;
+  return null;
+};
+
 const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleName }: GeneratedRequirementsProps) => {
   const [isGenerating, setIsGenerating] = useState(true);
   const [roleData, setRoleData] = useState<RoleData | null>(null);
@@ -58,11 +96,17 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
   const [eligibilityText, setEligibilityText] = useState('');
   const [newToolItem, setNewToolItem] = useState({ name: '', priority: 'High', type: 'Tool' });
   const [newComplianceItem, setNewComplianceItem] = useState({ name: '', priority: 'High' });
-  const [requirementsSource, setRequirementsSource] = useState<'uploaded_document' | 'defined' | null>(null);
+  const [requirementsSource, setRequirementsSource] = useState<'uploaded_document' | 'defined' | null>(getInitialRequirementsSource());
+  const [uploadedDocumentId, setUploadedDocumentId] = useState(localStorage.getItem('uploadedDocumentId'));
   const [editingTool, setEditingTool] = useState<{index: number, type: 'Tool' | 'Technology'} | null>(null);
   const [editingCompliance, setEditingCompliance] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [aiGenerating, setAIGenerating] = useState(false);
+  const [aiError, setAIError] = useState<string | null>(null);
+
+  // Add a Save All button and a function to POST all requirements
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>("idle");
 
   useEffect(() => {
     // Only use localStorage for requirementsSource, uploadedDocumentId, and selectedRoleId
@@ -70,14 +114,14 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
       setLoading(true);
       setError(null);
       try {
-        const storedSource = localStorage.getItem('requirementsSource') as 'uploaded_document' | 'defined' | null;
-        const storedDocumentId = localStorage.getItem('uploadedDocumentId');
+        const storedSource = requirementsSource;
+        const storedDocumentId = uploadedDocumentId;
         const storedRoleId = localStorage.getItem('selectedRoleId');
         setRequirementsSource(storedSource);
 
         if (storedSource === 'uploaded_document' && storedDocumentId) {
           try {
-            const response = await fetch(`http://localhost:3000/api/v1/upload-requirements/document/${storedDocumentId}`);
+            const response = await fetch(`http://localhost:3000/api/v1/upload-requirements/${storedDocumentId}`);
             if (response.ok) {
               const profileData = await response.json();
               setRoleData(profileData);
@@ -136,7 +180,7 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [requirementsSource, uploadedDocumentId]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -158,48 +202,8 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
     }
   };
 
-  const saveResponsibilities = async () => {
-    if (!roleData) return;
-    const newResponsibilities = responsibilityText.split('\n').filter(item => item.trim() !== '');
-    setResponsibilities(newResponsibilities);
-    // Update via API
-    try {
-      const response = await fetch(`http://localhost:3000/api/v1/requirement-profiles/${roleData.id || roleData._id || ''}/tasks`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ TASKS: newResponsibilities })
-      });
-      if (response.ok) {
-        const updated = { ...roleData, TASKS: newResponsibilities };
-        setRoleData(updated);
-      }
-    } catch (error) {
-      console.error('Failed to update responsibilities:', error);
-    }
-  };
-
-  const saveEligibility = async () => {
-    if (!roleData) return;
-    const newEligibility = eligibilityText.split('\n').filter(item => item.trim() !== '');
-    setEligibility(newEligibility);
-    // Update via API
-    try {
-      const response = await fetch(`http://localhost:3000/api/v1/requirement-profiles/${roleData.id || roleData._id || ''}/skills`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ SKILLS: newEligibility })
-      });
-      if (response.ok) {
-        const updated = { ...roleData, SKILLS: newEligibility };
-        setRoleData(updated);
-      }
-    } catch (error) {
-      console.error('Failed to update eligibility:', error);
-    }
-  };
-
-  // Remove all add/update/remove API calls for tools, technologies, and compliance
-  // Only update state locally for these sections
+  // Remove saveResponsibilities and saveEligibility functions
+  // Remove Save buttons for responsibilities and eligibility in the render
 
   // Add Tool/Technology locally
   const addNewTool = () => {
@@ -277,6 +281,109 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
     setEditingCompliance(null);
   };
 
+  // Save all requirements to backend
+  const saveAllRequirements = async () => {
+    if (!roleData) return;
+    setSaveStatus('saving');
+    try {
+      const response = await fetch('http://localhost:3000/api/v1/generated-requirements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roleName: roleData.ROLE_NAME || '',
+          source: requirementsSource === 'uploaded_document' ? 'DOCUMENT' : 'MANUAL',
+          responsibilities: responsibilities.map(item => ({
+            description: String(item),
+          })),
+          eligibility: eligibility.map(item => ({
+            description: String(item)
+          })),
+          toolsAndTechnologies: [
+            ...(roleData.TOOLS || []).map(tool => ({
+              name: tool.name,
+              category: 'Tool',
+              priority: tool.priority.toUpperCase()
+            })),
+            ...(roleData.TECHNOLOGIES || []).map(tech => ({
+              name: tech.name,
+              category: 'Technology',
+              priority: tech.priority.toUpperCase()
+            }))
+          ],
+          compliance: (roleData.COMPLIANCES || []).map(comp => ({
+            requirement: String(comp.name ?? ''),
+            name: String(comp.name ?? ''),
+            type: 'Compliance',
+            priority: comp.priority.toUpperCase()
+          }))
+        })
+      });
+      if (response.ok) {
+        setSaveStatus('success');
+      } else {
+        setSaveStatus('error');
+      }
+    } catch (error) {
+      setSaveStatus('error');
+    }
+  };
+
+  // Function to call FastAPI LLM service and populate requirements
+  const generateRequirementsWithAI = async () => {
+    setAIGenerating(true);
+    setAIError(null);
+    try {
+      const payload = {
+        role_name: roleData?.ROLE_NAME || selectedRoleName || "",
+        industry: "Automotive", // or get from user/context
+        experience_level: "Mid-level",
+        department: "", // optional
+        additional_context: "" // optional
+      };
+      const response = await fetch("http://localhost:8001/generate-requirements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error("Failed to generate requirements with AI");
+      const aiData: AIRequirementsResponse = await response.json();
+
+      setRoleData((prev) => ({
+        ...prev,
+        TASKS: aiData.responsibilities?.map((r: AIRoleRequirement) => r.description) || [],
+        SKILLS: aiData.eligibility?.map((e: AIEligibility) => e.description) || [],
+        TOOLS: aiData.tools_and_technologies
+          ?.filter((t: AIToolTechnology) => t.category === "Tool")
+          .map((t: AIToolTechnology) => ({
+            name: t.name,
+            priority: t.priority === "Critical" ? "High" : (t.priority as 'High' | 'Medium' | 'Low') || 'High',
+            type: "Tool"
+          })) || [],
+        TECHNOLOGIES: aiData.tools_and_technologies
+          ?.filter((t: AIToolTechnology) => t.category !== "Tool")
+          .map((t: AIToolTechnology) => ({
+            name: t.name,
+            priority: t.priority === "Critical" ? "High" : (t.priority as 'High' | 'Medium' | 'Low') || 'High',
+            type: "Technology"
+          })) || [],
+        COMPLIANCES: aiData.compliance?.map((c: AICompliance) => ({
+          name: c.name,
+          priority: c.priority === "Critical" ? "High" : (c.priority as 'High' | 'Medium' | 'Low') || 'High',
+        })) || [],
+      }));
+      setResponsibilities(aiData.responsibilities?.map((r: AIRoleRequirement) => r.description) || []);
+      setEligibility(aiData.eligibility?.map((e: AIEligibility) => e.description) || []);
+      setResponsibilityText((aiData.responsibilities?.map((r: AIRoleRequirement) => r.description) || []).join("\n"));
+      setEligibilityText((aiData.eligibility?.map((e: AIEligibility) => e.description) || []).join("\n"));
+      setAIGenerating(false);
+    } catch (err: unknown) {
+      let message = "AI generation failed";
+      if (err instanceof Error) message = err.message;
+      setAIError(message);
+      setAIGenerating(false);
+    }
+  };
+
   if (isGenerating || loading) {
     return (
       <div className="max-w-7xl mx-auto">
@@ -343,6 +450,20 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
 
   return (
     <div className="max-w-7xl mx-auto">
+      {/* AI Generate Button - Centered */}
+      <div className="flex justify-center mb-8">
+        <Button
+          onClick={generateRequirementsWithAI}
+          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all flex items-center gap-2"
+          disabled={aiGenerating}
+        >
+          {aiGenerating && <Loader2 className="animate-spin w-5 h-5" />}
+          Generate Requirements with AI
+        </Button>
+      </div>
+      {aiError && (
+        <div className="mb-4 text-red-600 text-center font-medium">{aiError}</div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-center mb-8">
       </div>
@@ -396,19 +517,16 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
             
             <Textarea
               value={responsibilityText}
-              onChange={(e) => setResponsibilityText(e.target.value)}
+              onChange={e => {
+                setResponsibilityText(e.target.value);
+                setResponsibilities(e.target.value.split('\n').filter(item => item.trim() !== ''));
+              }}
               placeholder="Enter responsibilities (one per line)..."
               rows={12}
               className="mb-6 text-base leading-relaxed"
             />
             
-            <Button 
-              onClick={saveResponsibilities} 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save Responsibilities
-            </Button>
+            {/* Removed Save Responsibilities button */}
           </Card>
 
           {/* Eligibility Criteria */}
@@ -422,19 +540,16 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
             
             <Textarea
               value={eligibilityText}
-              onChange={(e) => setEligibilityText(e.target.value)}
+              onChange={e => {
+                setEligibilityText(e.target.value);
+                setEligibility(e.target.value.split('\n').filter(item => item.trim() !== ''));
+              }}
               placeholder="Enter eligibility criteria (one per line)..."
               rows={12}
               className="mb-6 text-base leading-relaxed"
             />
             
-            <Button 
-              onClick={saveEligibility} 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save Eligibility Criteria
-            </Button>
+            {/* Removed Save Eligibility button */}
           </Card>
         </div>
 
@@ -754,8 +869,14 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
           </svg>
           Back to Benchmarking
         </button>
-        
         <div className="flex space-x-4">
+          <Button 
+            onClick={saveAllRequirements}
+            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white"
+            disabled={saveStatus === 'saving'}
+          >
+            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'success' ? 'Saved!' : 'Save All Requirements'}
+          </Button>
           <Button 
             onClick={() => {
               // Navigate to Requirements Builder

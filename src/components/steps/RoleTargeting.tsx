@@ -9,7 +9,8 @@ import {
   MapPin,
   Clock,
   Cog,
-  Loader2
+  Loader2,
+  ArrowLeft
 } from "lucide-react";
 
 // Interface for the API response
@@ -36,9 +37,10 @@ interface RoleTargetingProps {
   selectedRole: string | null;
   onSelectRole: (roleId: string, roleTitle: string) => void;
   onRequirementChoice?: (choice: 'have' | 'define') => void;
+  onBack?: () => void;
 }
 
-const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice }: RoleTargetingProps) => {
+const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice, onBack }: RoleTargetingProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [hasRequirements, setHasRequirements] = useState<boolean | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -48,28 +50,21 @@ const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice }: Role
   // Fetch roles from API
   useEffect(() => {
     const fetchRoles = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        setLoading(true);
-        setError(null);
-
-        const response = await fetch("http://localhost:3000/api/v1/roles");
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
+        const response = await fetch(`http://localhost:3000/api/v1/roles?search=${encodeURIComponent(searchTerm)}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setRoles(data);
       } catch (err) {
-        console.error('Failed to fetch roles:', err);
         setError('Failed to load roles. Please try again.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchRoles();
-  }, []);
+  }, [searchTerm]);
 
   // Filter roles based on search term
   const filteredRoles = roles.filter(role =>
@@ -114,6 +109,19 @@ const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice }: Role
 
   return (
     <div className="max-w-7xl mx-auto">
+      {onBack && (
+        <div className="mb-8">
+          <Button
+            variant="outline"
+            onClick={onBack}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </Button>
+        </div>
+      )}
+      
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
           Select Target Role

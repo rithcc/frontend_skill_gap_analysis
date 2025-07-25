@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Brain,
   Menu,
@@ -7,6 +8,7 @@ import {
   Lightbulb,
   BarChart3,
   ArrowRight,
+  ArrowLeft,
   Play,
   CheckCircle,
   Zap,
@@ -17,11 +19,13 @@ import { useState } from "react";
 interface ObjectiveSelectionProps {
   selectedObjective: string | null;
   onSelectObjective: (objective: string) => void;
+  onBack?: () => void;
 }
 
 const ObjectiveSelection = ({
   selectedObjective,
   onSelectObjective,
+  onBack,
 }: ObjectiveSelectionProps) => {
   const [showAuth, setShowAuth] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -172,6 +176,19 @@ const ObjectiveSelection = ({
   return (
     <section className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {onBack && (
+          <div className="mb-8">
+            <Button
+              variant="outline"
+              onClick={onBack}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </Button>
+          </div>
+        )}
+        
         <div className="text-center mb-16">
           <h2 className="text-5xl font-bold mb-6">
             <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">

@@ -230,7 +230,7 @@ export default function AnalysisProgress({ onNext, onBack }: AnalysisProgressPro
               className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-2xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
               disabled={progress >= 100}
             >
-              ← Back to Skills Overview
+              ← Back
             </button>
           </div>
         </div>

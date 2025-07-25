@@ -1,13 +1,15 @@
 
 import { Card } from "@/components/ui/card";
-import { Globe, Building2, Users, Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Globe, Building2, Users, Target, ArrowLeft } from "lucide-react";
 
 interface BenchmarkingScenarioProps {
   selectedScenario: string | null;
   onSelectScenario: (scenario: string) => void;
+  onBack?: () => void;
 }
 
-const BenchmarkingScenario = ({ selectedScenario, onSelectScenario }: BenchmarkingScenarioProps) => {
+const BenchmarkingScenario = ({ selectedScenario, onSelectScenario, onBack }: BenchmarkingScenarioProps) => {
   const scenarios = [
     {
       id: "ecosystem",
@@ -43,6 +45,18 @@ const BenchmarkingScenario = ({ selectedScenario, onSelectScenario }: Benchmarki
 
   return (
     <div className="max-w-7xl mx-auto">
+      {onBack && (
+        <div className="mb-8">
+          <Button
+            variant="outline"
+            onClick={onBack}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </Button>
+        </div>
+      )}
       
       <div className="text-center mb-16">
         <div className="w-16 h-16 bg-modern-blue rounded-2xl flex items-center justify-center mx-auto mb-6">

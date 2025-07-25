@@ -59,69 +59,280 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate loading and set hardcoded data
-    const loadMockData = () => {
-      setTimeout(() => {
-        const mockData: ResumeData = {
-          personal_info: {
-            name: "Sarah Johnson",
-            title: "Senior Full Stack Developer",
-            email: "sarah.johnson@example.com",
-            phone: "+1-555-0123",
-            location: "San Francisco, CA"
-          },
-          industries: ["Technology", "FinTech", "E-commerce", "Healthcare"],
-          domains: ["Web Development", "Mobile Applications", "Cloud Computing", "DevOps"],
-          use_cases: ["E-commerce Platforms", "Payment Systems", "Data Analytics", "API Development"],
-          technologies: ["React", "Node.js", "TypeScript", "Python", "PostgreSQL", "MongoDB", "AWS", "Docker"],
-          tools: ["Git", "Jenkins", "Kubernetes", "Terraform", "Jira", "Figma", "Postman", "VS Code"],
-          compliances: ["SOC 2 Type II", "PCI DSS", "GDPR", "HIPAA"],
-          experience_overview: {
-            total_experience_years: 8,
-            areas: [
-              { Skill: "Frontend Development", "percentage of Proficiency": "95%", years: 8 },
-              { Skill: "Backend Development", "percentage of Proficiency": "90%", years: 7 },
-              { Skill: "Cloud Architecture", "percentage of Proficiency": "85%", years: 5 },
-              { Skill: "DevOps", "percentage of Proficiency": "80%", years: 4 },
-              { Skill: "Mobile Development", "percentage of Proficiency": "75%", years: 3 }
-            ]
-          },
-          work_history: [
-            { role: "Senior Full Stack Developer", company: "TechCorp Inc.", start_year: 2021, end_year: "Present" },
-            { role: "Full Stack Developer", company: "StartupXYZ", start_year: 2019, end_year: 2021 },
-            { role: "Frontend Developer", company: "WebSolutions Ltd.", start_year: 2017, end_year: 2019 },
-            { role: "Junior Developer", company: "CodeCraft Agency", start_year: 2016, end_year: 2017 }
-          ],
-          professional_summary: {
-            "PDLC Phases": ["Requirements Analysis", "System Design", "Implementation", "Testing", "Deployment", "Maintenance"],
-            "Key Strengths": [
-              "Expert in modern JavaScript frameworks and libraries",
-              "Strong background in cloud-native application development",
-              "Proven track record in leading cross-functional teams",
-              "Excellent problem-solving and debugging skills"
-            ],
-            "Recent Learning": ["Kubernetes", "GraphQL", "Machine Learning", "Microservices", "Serverless Architecture"]
-          },
-          qualifications: {
-            education: [
-              "Master of Science in Computer Science - Stanford University (2016)",
-              "Bachelor of Science in Software Engineering - UC Berkeley (2014)"
-            ],
-            certifications: [
-              "AWS Certified Solutions Architect",
-              "Certified Kubernetes Administrator",
-              "Google Cloud Professional Developer",
-              "Scrum Master Certification"
-            ]
-          }
-        };
+    // Load real data from localStorage
+    const loadResumeData = () => {
+      try {
+        // Check if we have resume data from the upload step
+        const combinedResumeText = localStorage.getItem('combinedResumeText');
+        const structuredResumeData = localStorage.getItem('structuredResumeData');
+        const resumeMetadata = localStorage.getItem('resumeMetadata');
         
-        setResumeData(mockData);
+        console.log('[EmployeeSkillCards] Loading data from localStorage');
+        console.log('[EmployeeSkillCards] Combined text length:', combinedResumeText?.length || 0);
+        console.log('[EmployeeSkillCards] Structured data:', structuredResumeData);
+        console.log('[EmployeeSkillCards] Resume metadata:', resumeMetadata);
+        
+        // Try to parse structured data first
+        if (structuredResumeData) {
+          try {
+            const parsedStructuredData = JSON.parse(structuredResumeData);
+            console.log('[EmployeeSkillCards] Using structured data from API:', parsedStructuredData);
+            
+            if (parsedStructuredData.length > 0) {
+              // For now, use the first resume's data
+              const firstResumeData = parsedStructuredData[0];
+              
+              // Try to get the original API response if it was stored
+              // For now, we'll create a structure from what we have
+              const resumeData: ResumeData = {
+                personal_info: firstResumeData.personal_info || null,
+                industries: firstResumeData.industries || null,
+                domains: firstResumeData.domains || null,
+                use_cases: firstResumeData.use_cases || null,
+                technologies: firstResumeData.technologies || null,
+                tools: firstResumeData.tools || null,
+                compliances: firstResumeData.compliances || null,
+                experience_overview: firstResumeData.experience_overview || null,
+                work_history: firstResumeData.work_history || null,
+                professional_summary: firstResumeData.professional_summary || null,
+                qualifications: firstResumeData.qualifications || null
+              };
+              
+              setResumeData(resumeData);
+              setLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.warn('[EmployeeSkillCards] Failed to parse structured data:', e);
+          }
+        }
+        
+        // If we have combined text but no structured data, try to parse the text
+        if (combinedResumeText && combinedResumeText.trim()) {
+          console.log('[EmployeeSkillCards] Parsing resume text to extract structured data');
+          
+          // Extract information from the formatted text
+          const extractedData: ResumeData = {
+            personal_info: null,
+            industries: null,
+            domains: null,
+            use_cases: null,
+            technologies: null,
+            tools: null,
+            compliances: null,
+            experience_overview: null,
+            work_history: null,
+            professional_summary: null,
+            qualifications: null
+          };
+          
+          // Parse personal info
+          const personalInfoMatch = combinedResumeText.match(/=== PERSONAL INFORMATION ===([\s\S]*?)(?===|$)/);
+          if (personalInfoMatch) {
+            const personalInfo = personalInfoMatch[1];
+            const nameMatch = personalInfo.match(/Name: (.+)/);
+            const titleMatch = personalInfo.match(/Title: (.+)/);
+            const emailMatch = personalInfo.match(/Email: (.+)/);
+            const phoneMatch = personalInfo.match(/Phone: (.+)/);
+            const locationMatch = personalInfo.match(/Location: (.+)/);
+            
+            if (nameMatch || titleMatch || emailMatch || phoneMatch || locationMatch) {
+              extractedData.personal_info = {
+                name: nameMatch?.[1]?.trim() || "Resume Holder",
+                title: titleMatch?.[1]?.trim() || "Professional",
+                email: emailMatch?.[1]?.trim() || "contact@email.com",
+                phone: phoneMatch?.[1]?.trim() || "+1-XXX-XXXX",
+                location: locationMatch?.[1]?.trim() || "Location"
+              };
+            }
+          }
+          
+          // Parse technologies
+          const techMatch = combinedResumeText.match(/=== TECHNOLOGIES ===([\s\S]*?)(?===|$)/);
+          if (techMatch) {
+            const techText = techMatch[1].trim();
+            if (techText) {
+              extractedData.technologies = techText.split(',').map(t => t.trim()).filter(t => t);
+            }
+          }
+          
+          // Parse tools
+          const toolsMatch = combinedResumeText.match(/=== TOOLS ===([\s\S]*?)(?===|$)/);
+          if (toolsMatch) {
+            const toolsText = toolsMatch[1].trim();
+            if (toolsText) {
+              extractedData.tools = toolsText.split(',').map(t => t.trim()).filter(t => t);
+            }
+          }
+          
+          // Parse industries
+          const industriesMatch = combinedResumeText.match(/=== INDUSTRIES ===([\s\S]*?)(?===|$)/);
+          if (industriesMatch) {
+            const industriesText = industriesMatch[1].trim();
+            if (industriesText) {
+              extractedData.industries = industriesText.split(',').map(t => t.trim()).filter(t => t);
+            }
+          }
+          
+          // Parse domains
+          const domainsMatch = combinedResumeText.match(/=== DOMAINS ===([\s\S]*?)(?===|$)/);
+          if (domainsMatch) {
+            const domainsText = domainsMatch[1].trim();
+            if (domainsText) {
+              extractedData.domains = domainsText.split(',').map(t => t.trim()).filter(t => t);
+            }
+          }
+          
+          // Parse experience overview
+          const expMatch = combinedResumeText.match(/=== EXPERIENCE OVERVIEW ===([\s\S]*?)(?===|$)/);
+          if (expMatch) {
+            const expText = expMatch[1];
+            const yearsMatch = expText.match(/Total Experience: (\d+) years/);
+            
+            if (yearsMatch) {
+              extractedData.experience_overview = {
+                total_experience_years: parseInt(yearsMatch[1]),
+                areas: []
+              };
+              
+              // Parse skills
+              const skillMatches = expText.match(/- (.+?): (.+?) \((\d+) years\)/g);
+              if (skillMatches) {
+                extractedData.experience_overview.areas = skillMatches.map(match => {
+                  const parts = match.match(/- (.+?): (.+?) \((\d+) years\)/);
+                  return {
+                    Skill: parts?.[1] || '',
+                    "percentage of Proficiency": parts?.[2] || '',
+                    years: parseInt(parts?.[3] || '0')
+                  };
+                });
+              }
+            }
+          }
+          
+          // Parse work history
+          const workMatch = combinedResumeText.match(/=== WORK HISTORY ===([\s\S]*?)(?===|$)/);
+          if (workMatch) {
+            const workText = workMatch[1];
+            const jobMatches = workText.match(/(.+?) at (.+?) \((\d+) - (.+?)\)/g);
+            if (jobMatches) {
+              extractedData.work_history = jobMatches.map(match => {
+                const parts = match.match(/(.+?) at (.+?) \((\d+) - (.+?)\)/);
+                return {
+                  role: parts?.[1]?.trim() || '',
+                  company: parts?.[2]?.trim() || '',
+                  start_year: parseInt(parts?.[3] || '0'),
+                  end_year: parts?.[4]?.trim() === 'Present' ? 'Present' : parseInt(parts?.[4] || '0')
+                };
+              });
+            }
+          }
+          
+          // Parse professional summary
+          const summaryMatch = combinedResumeText.match(/=== PROFESSIONAL SUMMARY ===([\s\S]*?)(?===|$)/);
+          if (summaryMatch) {
+            const summaryText = summaryMatch[1];
+            const strengthsMatch = summaryText.match(/Key Strengths:([\s\S]*?)(?=Recent Learning:|$)/);
+            const learningMatch = summaryText.match(/Recent Learning:([\s\S]*?)(?===|$)/);
+            
+            extractedData.professional_summary = {
+              "PDLC Phases": null,
+              "Key Strengths": null,
+              "Recent Learning": null
+            };
+            
+            if (strengthsMatch) {
+              const strengths = strengthsMatch[1].trim().split('\n').map(s => s.replace(/^- /, '').trim()).filter(s => s);
+              if (strengths.length > 0) {
+                extractedData.professional_summary["Key Strengths"] = strengths;
+              }
+            }
+            
+            if (learningMatch) {
+              const learning = learningMatch[1].trim().split('\n').map(s => s.replace(/^- /, '').trim()).filter(s => s);
+              if (learning.length > 0) {
+                extractedData.professional_summary["Recent Learning"] = learning;
+              }
+            }
+          }
+          
+          // Parse qualifications
+          const qualMatch = combinedResumeText.match(/=== QUALIFICATIONS ===([\s\S]*?)(?===|$)/);
+          if (qualMatch) {
+            const qualText = qualMatch[1];
+            const eduMatch = qualText.match(/Education:([\s\S]*?)(?=Certifications:|$)/);
+            const certMatch = qualText.match(/Certifications:([\s\S]*?)(?===|$)/);
+            
+            extractedData.qualifications = {
+              education: null,
+              certifications: null
+            };
+            
+            if (eduMatch) {
+              const education = eduMatch[1].trim().split('\n').map(s => s.replace(/^- /, '').trim()).filter(s => s);
+              if (education.length > 0) {
+                extractedData.qualifications.education = education;
+              }
+            }
+            
+            if (certMatch) {
+              const certifications = certMatch[1].trim().split('\n').map(s => s.replace(/^- /, '').trim()).filter(s => s);
+              if (certifications.length > 0) {
+                extractedData.qualifications.certifications = certifications;
+              }
+            }
+          }
+          
+          console.log('[EmployeeSkillCards] Extracted data from resume text:', extractedData);
+          setResumeData(extractedData);
+        } else {
+          console.log('[EmployeeSkillCards] No resume data found, using fallback mock data');
+          // Fallback to original mock data if no resume text is available
+          const mockData: ResumeData = {
+            personal_info: {
+              name: "Demo User",
+              title: "Sample Professional",
+              email: "demo@example.com",
+              phone: "+1-555-0123",
+              location: "Sample Location"
+            },
+            industries: ["Demo Industry"],
+            domains: ["Demo Domain"],
+            use_cases: ["Demo Use Case"],
+            technologies: ["React", "TypeScript", "Node.js"],
+            tools: ["VS Code", "Git"],
+            compliances: ["Demo Compliance"],
+            experience_overview: {
+              total_experience_years: 5,
+              areas: [
+                { Skill: "Demo Skill", "percentage of Proficiency": "80%", years: 5 }
+              ]
+            },
+            work_history: [
+              { role: "Demo Role", company: "Demo Company", start_year: 2020, end_year: "Present" }
+            ],
+            professional_summary: {
+              "PDLC Phases": ["Demo Phase"],
+              "Key Strengths": ["Demo Strength"],
+              "Recent Learning": ["Demo Learning"]
+            },
+            qualifications: {
+              education: ["Demo Education"],
+              certifications: ["Demo Certification"]
+            }
+          };
+          
+          setResumeData(mockData);
+        }
+        
         setLoading(false);
-      }, 1500); // Simulate 1.5 second loading time
+      } catch (error) {
+        console.error('[EmployeeSkillCards] Error loading resume data:', error);
+        setLoading(false);
+      }
     };
 
-    loadMockData();
+    loadResumeData();
   }, []);
 
   if (loading) return (
@@ -179,6 +390,21 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
               </div>
               <div className="text-xs text-gray-500 mt-1">Generated by AI Analysis Engine</div>
             </div>
+          </div>
+        </div>
+        
+        {/* Data Source Indicator */}
+        <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-blue-800">
+              {(() => {
+                const hasResumeData = localStorage.getItem('combinedResumeText');
+                return hasResumeData ? 
+                  `Data Source: Uploaded Resume Content (${hasResumeData.length} characters processed)` : 
+                  'Data Source: Demo Preview (Upload resumes in previous step for real analysis)';
+              })()}
+            </span>
           </div>
         </div>
       </div>
@@ -246,7 +472,7 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
                   onClick={onBack || (() => window.location.href = '/index.html?screen=ResumeUpload')}
                   className="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-2xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 text-center font-medium"
                 >
-                  ← Back to Resume Upload
+                  ← Back
                 </button>
               </div>
             </div>

@@ -10,18 +10,10 @@ interface ResumeUploadProps {
   onBack?: () => void;
 }
 
-interface UploadedFile {
-  id: number;
-  name: string;
-  size: string;
-  status: 'uploading' | 'completed' | 'error';
-  progress: number;
-  file: File;
-}
-
 export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
   const [currentResumeText, setCurrentResumeText] = useState<string | null>(null);
   const [combinedResumeText, setCombinedResumeText] = useState<string>('');
   const [extractedTexts, setExtractedTexts] = useState<string[]>([]);
@@ -31,7 +23,7 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
       const fd = new FormData();
       fd.append('file', file);
 
-      const res = await fetch('http://localhost:8000/api/extract-resume', {
+      const res = await fetch('http://localhost:8001/api/extract-resume', {
         method: 'POST',
         body: fd,
       });
@@ -70,7 +62,6 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
     // Store in localStorage for other pages to access
     localStorage.setItem('combinedResumeText', combined);
     localStorage.setItem('individualResumeTexts', JSON.stringify(texts));
-    localStorage.setItem('firstResumeText', texts[0] || ''); // Store first resume for EmployeeSkillCards
     
     console.log('[processAllResumes] Combined resume text length:', combined.length);
     console.log('[processAllResumes] Individual texts count:', texts.length);
@@ -82,11 +73,11 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
 
-    const newFiles: UploadedFile[] = Array.from(files).map((file, idx) => ({
+    const newFiles = Array.from(files).map((file, idx) => ({
       id: Date.now() + idx,
       name: file.name,
       size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-      status: 'uploading' as const,
+      status: 'uploading',
       progress: 0,
       file,
     }));
@@ -391,7 +382,7 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
             <svg className="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Requirements
+            Back
           </button>
           
           <div className="flex gap-3">
@@ -399,7 +390,7 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
               Save as Draft
             </button>
             <button
-              onClick={() => window.location.href = '/index.html?screen=EmployeeSkillCards'}
+              onClick={onNext}
               disabled={uploadedFiles.length === 0}
               className={`inline-flex items-center px-8 py-4 rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
                 uploadedFiles.length > 0

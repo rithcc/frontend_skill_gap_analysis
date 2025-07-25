@@ -1,5 +1,7 @@
 'use client';
 import React, { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 interface Member {
   name: string
@@ -8,7 +10,11 @@ interface Member {
   fitmentScore: number
 }
 
-export default function SGAAnalysis() {
+interface SGAAnalysisProps {
+  onBack?: () => void;
+}
+
+export default function SGAAnalysis({ onBack }: SGAAnalysisProps) {
   // State for dynamic data
   const [roleName, setRoleName] = useState('ADAS Computer Vision Engineer - Automotive Industry')
   const [teamData, setTeamData] = useState({
@@ -175,6 +181,16 @@ export default function SGAAnalysis() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
+              {onBack && (
+                <Button
+                  variant="outline"
+                  onClick={onBack}
+                  className="flex items-center space-x-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back</span>
+                </Button>
+              )}
               <div className="text-sm text-gray-600 bg-white/60 px-3 py-1 rounded-full">
                 Team Skill Gap Analysis
               </div>
