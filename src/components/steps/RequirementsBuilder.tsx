@@ -28,7 +28,15 @@ interface RequirementProfile {
 }
 
 // 🔹 Labels
-const experienceLabels = ['Entry (0-1y)', 'Junior (1-3y)', 'Mid (3-5y)', 'Senior (5-8y)', 'Expert (8y+)'];
+  const experienceLabels = ['Entry (0-1y)', 'Junior (1-3y)', 'Mid (3-5y)', 'Senior (5-8y)', 'Expert (8y+)'];
+  // Experience level color logic matches competenceLevels
+  const experienceLevels = [
+    { label: 'Entry (0-1y)', color: 'bg-teal-50 text-teal-700', selectedColor: 'bg-teal-400 text-white' },
+    { label: 'Junior (1-3y)', color: 'bg-blue-100 text-blue-700', selectedColor: 'bg-blue-500 text-white' },
+    { label: 'Mid (3-5y)', color: 'bg-green-100 text-green-700', selectedColor: 'bg-green-500 text-white' },
+    { label: 'Senior (5-8y)', color: 'bg-purple-100 text-purple-700', selectedColor: 'bg-purple-500 text-white' },
+    { label: 'Expert (8y+)', color: 'bg-red-100 text-red-700', selectedColor: 'bg-red-500 text-white' },
+  ];
 const competenceLabels = ['Basic', 'Working', 'Proficient', 'Advanced', 'Expert'];
 
 // 🔹 Main Component
@@ -59,7 +67,7 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
   };
   const [skillProficiencies, setSkillProficiencies] = useState<SkillProficiency[]>([]);
   const competenceLevels = [
-    { value: 'Basic', level: 1, color: 'bg-gray-100 text-gray-700', selectedColor: 'bg-gray-500 text-white' },
+    { value: 'Basic', level: 1, color: 'bg-teal-50 text-teal-700', selectedColor: 'bg-teal-400 text-white' },
     { value: 'Working', level: 2, color: 'bg-blue-100 text-blue-700', selectedColor: 'bg-blue-500 text-white' },
     { value: 'Proficient', level: 3, color: 'bg-green-100 text-green-700', selectedColor: 'bg-green-500 text-white' },
     { value: 'Advanced', level: 4, color: 'bg-purple-100 text-purple-700', selectedColor: 'bg-purple-500 text-white' },
@@ -379,17 +387,9 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                 className="flex-1"
               >
                 Reload Page
-              </Button>
-              {onBack && (
-                <Button 
-                  variant="outline" 
-                  onClick={onBack}
-                  className="flex-1"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+      {/* Removed step-level back button, only header back button remains */}
                   Go Back
                 </Button>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -408,43 +408,54 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg">
-          <CardHeader>
-            <CardTitle>Loading Requirements...</CardTitle>
-            <CardDescription>
-              {requirementsSource === 'uploaded_document' ? 'Fetching data from uploaded document' : 'Preparing requirement builder'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-600 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
+              </svg>
+            </div>
+          </div>
+          <div className="text-lg font-semibold text-blue-700 text-center">
+            {requirementsSource === 'uploaded_document'
+              ? 'Fetching data from uploaded document...'
+              : 'Preparing Requirements Builder...'}
+          </div>
+          <div className="text-sm text-gray-500 text-center max-w-xs">
+            Please wait while we load your requirements. This may take a few seconds.
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Update experienceLevelColors to include both filled and outline styles
-  const experienceLevelColors = [
-    { filled: 'bg-gray-500 text-white border-gray-500', outline: 'bg-gray-100 text-gray-700 border-gray-300' },
-    { filled: 'bg-blue-500 text-white border-blue-500', outline: 'bg-blue-100 text-blue-700 border-blue-300' },
-    { filled: 'bg-green-500 text-white border-green-500', outline: 'bg-green-100 text-green-700 border-green-300' },
-    { filled: 'bg-purple-500 text-white border-purple-500', outline: 'bg-purple-100 text-purple-700 border-purple-300' },
-    { filled: 'bg-red-500 text-white border-red-500', outline: 'bg-red-100 text-red-700 border-red-300' },
-  ];
+
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex flex-col justify-between">
       <div className="max-w-7xl mx-auto w-full">
         {/* Centered Header */}
         <div className="mb-8 flex flex-col items-center">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent text-center">
-            Requirements Builder
+          <h1 className="text-3xl font-semibold text-black text-center font-sans">
+            Requirement Builder
           </h1>
           {loadingSkills && (
             <div className="flex flex-col items-center mt-2">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mb-2"></div>
-              <div className="text-base font-medium text-blue-700">AI is defining the skill requirements and experience levels...</div>
+              <div className="relative mb-2">
+                <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-emerald-500 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v4m0 0V4m0 4c-4.418 0-8 1.79-8 4v2c0 2.21 3.582 4 8 4s8-1.79 8-4v-2c0-2.21-3.582-4-8-4z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-base font-semibold text-emerald-700 text-center">
+                AI is analyzing your role and skills...
+              </div>
+              <div className="text-xs text-gray-500 text-center max-w-xs mt-1">
+                Please wait while our AI defines the skill requirements and experience levels for your selection.
+              </div>
             </div>
           )}
         </div>
@@ -453,36 +464,51 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
           {/* Left Column - Controls */}
           <div className="lg:col-span-2 space-y-6">
             {/* Experience Level */}
-            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  Experience Level
-                </CardTitle>
-                <CardDescription className="text-emerald-100">
-                  Select the target experience level for this role
-                </CardDescription>
-              </CardHeader>
+            <Card className="bg-white border border-gray-200">
+              <div className="flex items-center gap-3 p-6 pb-0">
+                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                  {/* Briefcase icon for experience */}
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 12h4m-7 8h10a2 2 0 002-2V8a2 2 0 00-2-2h-3V5a2 2 0 00-2-2h-2a2 2 0 00-2 2v1H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-black">Experience Level</h3>
+                  <p className="text-gray-600">How many years of hands-on experience are required?</p>
+                </div>
+              </div>
               <CardContent className="p-6">
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
-                    {experienceLabels.map((label, index) => (
-                      <Button
+                    {experienceLevels.map((level, index) => (
+                      <button
                         key={index}
-                        variant={skillExperience === index ? "default" : "outline"}
                         onClick={() => setSkillExperience(index)}
-                        className={`flex-1 min-w-fit transition-all duration-200 border font-semibold ${
-                          skillExperience === index
-                            ? experienceLevelColors[index].filled + ' shadow-lg'
-                            : experienceLevelColors[index].outline + ' opacity-80 hover:opacity-100'
-                        }`}
+                        className={`flex-1 min-w-fit p-4 rounded-xl text-center transition-all duration-200 border font-semibold
+                          ${skillExperience === index
+                            ? `${level.selectedColor} border shadow-lg transform scale-105`
+                            : `${level.color} border opacity-80 hover:bg-gray-200 hover:opacity-100`}
+                        `}
                       >
-                        {label}
-                      </Button>
+                        <div className="text-sm font-semibold">{level.label}</div>
+                        <div className="text-xs mt-1 opacity-75">Level {index + 1}</div>
+                      </button>
                     ))}
                   </div>
-                  <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                    <div className="text-sm text-emerald-800">
+                  <div
+                    className={`p-3 rounded-lg border font-semibold ${
+                      skillExperience === 0
+                        ? 'bg-teal-50 border-teal-200 text-teal-700'
+                        : skillExperience === 1
+                        ? 'bg-blue-100 border-blue-200 text-blue-700'
+                        : skillExperience === 2
+                        ? 'bg-green-100 border-green-200 text-green-700'
+                        : skillExperience === 3
+                        ? 'bg-purple-100 border-purple-200 text-purple-700'
+                        : 'bg-red-100 border-red-200 text-red-700'
+                    }`}
+                  >
+                    <div className="text-sm">
                       <span className="font-semibold">Current selection:</span> {experienceLabels[skillExperience]}
                     </div>
                   </div>
@@ -499,7 +525,7 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">Skill Competence</h3>
+                  <h3 className="text-xl font-bold text-black">Skill Competence</h3>
                   <p className="text-gray-600">What depth of knowledge is expected?</p>
                 </div>
               </div>
@@ -523,7 +549,7 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
 
               {/* Detailed Skill Competence Sliders */}
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="font-semibold text-gray-900 mb-4">Detailed Competence Levels</h4>
+                <h4 className="font-semibold text-black mb-4">Detailed Competence Levels</h4>
                   
                 {skillCategories.length > 0 ? (
                   <div className="space-y-6">
@@ -553,16 +579,18 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
             </div>
 
             {/* Timeline & Budget */}
-            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  Project Parameters
-                </CardTitle>
-                <CardDescription className="text-amber-100">
-                  Set timeline and budget constraints
-                </CardDescription>
-              </CardHeader>
+            <Card className="bg-white border border-gray-200">
+              <div className="flex items-center gap-3 p-6 pb-0">
+                <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-black">Project Parameters</h3>
+                  <p className="text-gray-600">Set the expected timeline and budget for this role or project.</p>
+                </div>
+              </div>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
@@ -615,20 +643,22 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
 
           {/* Right Column - Preview */}
           <div className="space-y-6">
-            <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  Requirements Preview
-                </CardTitle>
-                <CardDescription className="text-indigo-100">
-                  Summary of your current settings
-                </CardDescription>
-              </CardHeader>
+            <Card className="bg-white border border-gray-200">
+              <div className="flex items-center gap-3 p-6 pb-0">
+                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4h4m0 0V7m0 4l-4-4-4 4" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-black">Requirements Preview</h3>
+                  <p className="text-gray-600">Review all selected requirements before continuing to analysis.</p>
+                </div>
+              </div>
               <CardContent className="p-6">
                 <div className="space-y-4">
                   <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-                    <h4 className="font-semibold text-indigo-900 mb-2 flex items-center gap-2">
+                    <h4 className="font-semibold text-black mb-2 flex items-center gap-2">
                       <span className="text-sm">🎯</span>
                       Experience Level
                     </h4>
@@ -636,7 +666,7 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                   </div>
                   
                   <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                    <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
+                    <h4 className="font-semibold text-black mb-2 flex items-center gap-2">
                       <span className="text-sm">⭐</span>
                       Competence Required
                     </h4>
@@ -644,7 +674,7 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                   </div>
                   
                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                    <h4 className="font-semibold text-black mb-3 flex items-center gap-2">
                       <span className="text-sm">📊</span>
                       Skill Focus Areas
                     </h4>
@@ -663,7 +693,7 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                   </div>
                   
                   <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-                    <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
+                    <h4 className="font-semibold text-black mb-3 flex items-center gap-2">
                       <span className="text-sm">⏱️</span>
                       Project Scope
                     </h4>
@@ -694,6 +724,5 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
           </div>
         </div>
       </div>
-    </div>
   );
 }

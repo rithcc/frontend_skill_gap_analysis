@@ -47,27 +47,18 @@ const BenchmarkingScenario = ({ selectedScenario, onSelectScenario, onBack }: Be
     <div className="max-w-7xl mx-auto">
       {onBack && (
         <div className="mb-8">
-          <Button
-            variant="outline"
-            onClick={onBack}
-            className="flex items-center space-x-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
-          </Button>
+      {/* Removed step-level back button, only header back button remains */}
         </div>
       )}
       
-      <div className="text-center mb-16">
-        <div className="w-16 h-16 bg-modern-blue rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <Target className="w-8 h-8 text-white" />
-        </div>
-        <h1 className="text-5xl font-bold text-gray-900 mb-6">
-          Define Your <span className="modern-blue">Benchmark</span>
-        </h1>
-        <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-          Choose your benchmarking approach to establish skill requirements. Each method provides unique 
-          insights and perspectives for building comprehensive, future-ready competency frameworks.
+      <div className="text-center mb-12 font-sans">
+        <h2 className="text-2xl font-bold mb-2 text-gray-900">
+          <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            Define Your Benchmark
+          </span>
+        </h2>
+        <p className="text-base text-gray-600 max-w-2xl mx-auto leading-normal">
+          Choose your benchmarking approach to establish skill requirements. Each method provides unique insights and perspectives for building comprehensive, future-ready competency frameworks.
         </p>
       </div>
 
@@ -83,7 +74,7 @@ const BenchmarkingScenario = ({ selectedScenario, onSelectScenario, onBack }: Be
                       ? 'ring-2 ring-modern-blue shadow-xl'
                       : 'border border-gray-200 hover:border-gray-300'
                   }`
-            }`}
+            } font-sans`}
             onClick={() => !scenario.disabled && onSelectScenario(scenario.id)}
           >
             {scenario.disabled && (
@@ -94,36 +85,31 @@ const BenchmarkingScenario = ({ selectedScenario, onSelectScenario, onBack }: Be
                 Coming Soon
               </div>
             )}
-            <div className="p-8">
-              <div className={`w-16 h-16 ${scenario.disabled ? 'bg-gray-400' : scenario.color} rounded-2xl flex items-center justify-center mb-6 ${!scenario.disabled ? 'group-hover:scale-110' : ''} transition-transform duration-300`}>
-                <scenario.icon className="w-8 h-8 text-white" />
+            <div className="p-6">
+              <div className={`w-14 h-14 ${scenario.disabled ? 'bg-gray-400' : scenario.color} rounded-2xl flex items-center justify-center mb-4 ${!scenario.disabled ? 'group-hover:scale-110' : ''} transition-transform duration-300 mx-auto`}>
+                <scenario.icon className="w-7 h-7 text-white" />
               </div>
-              
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1 text-center">
                 {scenario.title}
               </h3>
-              
-              <p className="text-sm font-semibold modern-blue mb-4">
+              <p className="text-xs font-semibold modern-blue mb-2 text-center">
                 {scenario.subtitle}
               </p>
-              
-              <p className="text-gray-600 mb-8 leading-relaxed">
+              <p className="text-sm text-gray-600 mb-4 leading-normal text-center">
                 {scenario.description}
               </p>
-
-              <div className="space-y-3">
-                <div className={`text-sm font-semibold mb-3 ${scenario.disabled ? 'text-gray-400' : 'modern-blue'}`}>
+              <div className="space-y-2 mt-auto">
+                <div className={`text-xs font-semibold mb-1 ${scenario.disabled ? 'text-gray-400' : 'modern-blue'}`}>
                   Intelligence Sources:
                 </div>
                 {scenario.features.map((feature, index) => (
-                  <div key={index} className={`flex items-center text-sm ${scenario.disabled ? 'text-gray-400' : 'text-gray-500'}`}>
-                    <div className={`w-2 h-2 ${scenario.disabled ? 'bg-gray-400' : scenario.color} rounded-full mr-3`}></div>
+                  <div key={index} className={`flex items-center text-xs ${scenario.disabled ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <div className={`w-2 h-2 ${scenario.disabled ? 'bg-gray-400' : scenario.color} rounded-full mr-2`}></div>
                     {feature}
                   </div>
                 ))}
               </div>
             </div>
-
             {/* Selection Indicator */}
             {selectedScenario === scenario.id && (
               <div className="absolute top-4 right-4 w-6 h-6 bg-modern-blue rounded-full flex items-center justify-center">

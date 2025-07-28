@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -18,6 +18,9 @@ import ReportGeneration from "@/components/steps/ReportGeneration";
 import SGAAnalysis from "@/components/steps/SGA Analysis";
 
 const Analysis = () => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedObjective, setSelectedObjective] = useState<string | null>(null);
@@ -30,15 +33,18 @@ const Analysis = () => {
   const handleNext = () => {
     if (currentStep < 13) {
       setCurrentStep(currentStep + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       // If on first step, go back to dashboard
       navigate("/dashboard");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -97,6 +103,11 @@ const Analysis = () => {
     }, 500);
   };
 
+  const handleGenerateReport = () => {
+    setCurrentStep(12);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -148,17 +159,15 @@ const Analysis = () => {
       case 8:
         return <AnalysisProgress onNext={handleNext} onBack={handleBack} />;
       case 9:
+        return <SGAAnalysis onNext={handleNext} onBack={handleBack} />;
+      case 10:
         return (
           <IndividualSkillGapAnalysis onNext={handleNext} onBack={handleBack} />
         );
-      case 10:
-        return <Recommendations onNext={handleNext} onBack={handleBack} />;
       case 11:
-        return <ReportViewNew onNext={handleNext} onBack={handleBack} />;
+        return <Recommendations onNext={handleNext} onBack={handleBack} />;
       case 12:
         return <ReportGeneration onNext={handleNext} onBack={handleBack} />;
-      case 13:
-        return <SGAAnalysis onBack={handleBack} />;
       default:
         return null;
     }
@@ -177,7 +186,7 @@ const Analysis = () => {
                 className="flex items-center space-x-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>{currentStep === 1 ? "Back to Dashboard" : "Back"}</span>
+                <span>Back</span>
               </Button>
             </div>
 
@@ -196,6 +205,7 @@ const Analysis = () => {
 
       {/* Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Only render step content, not an extra back button here */}
         {renderStep()}
       </div>
     </div>

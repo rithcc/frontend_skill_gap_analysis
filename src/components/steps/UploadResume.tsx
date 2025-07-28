@@ -153,17 +153,16 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+    <div className="min-h-screen bg-white font-sans text-base">
       {/* Modern Progress Indicator */}
-      <div className="bg-white/70 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-gray-600">Resume Upload & Analysis</span>
+            <div className="flex items-center space-x-3">
+              <span className="text-xs font-medium text-gray-500">Resume Upload & Analysis</span>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="text-xs text-gray-500">Step 6 of 6</div>
+              <div className="text-xs text-gray-400">Step 6 of 6</div>
               <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
                 <div className="w-full h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>
               </div>
@@ -175,19 +174,8 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
       <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Hero Section */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-            </div>
-            <div className="text-left">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                Team Resume Upload
-              </h1>
-              <p className="text-gray-600 mt-1">Upload and analyze your team's resumes for comprehensive skill assessment</p>
-            </div>
-          </div>
+          <h1 className="text-2xl font-semibold text-gray-900 font-sans mb-2">Team Resume Upload</h1>
+          <p className="text-sm text-gray-600 font-sans">Upload and analyze your team's resumes for comprehensive skill assessment</p>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -227,39 +215,21 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
                   </div>
                   <h4 className="text-xl font-semibold text-gray-900 mb-2">Drop files here or click to browse</h4>
                   <p className="text-gray-600 mb-6">Support for PDF, DOC, DOCX files • Max 10MB each</p>
-                  <button
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                    onClick={e => {
-                      e.stopPropagation();
-                      fileInputRef.current?.click();
-                    }}
-                  >
-                    Choose Files
-                  </button>
+                  <div className="flex justify-center">
+                    <button
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                      onClick={e => {
+                        e.stopPropagation();
+                        fileInputRef.current?.click();
+                      }}
+                    >
+                      Choose Files
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="mt-6 flex gap-3">
-                <button
-                  className="px-4 py-2 text-sm bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 rounded-xl font-medium transition-all duration-200"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add More Files
-                </button>
-                <button
-                  className="px-4 py-2 text-sm bg-gradient-to-r from-red-100 to-pink-100 hover:from-red-200 hover:to-pink-200 text-red-700 rounded-xl font-medium transition-all duration-200"
-                  onClick={clearAll}
-                >
-                  <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Clear All
-                </button>
-              </div>
+              {/* No Action Buttons here, removed as per new design. Ensure Clear All is not present. */}
             </div>
 
             {/* Resume Text Preview */}
@@ -373,36 +343,30 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
           </div>
         </div>
 
-        {/* Navigation Section */}
-        <div className="flex justify-between items-center mt-12 pt-6 border-t border-gray-200">
-          <button 
-            onClick={onBack}
-            className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-all duration-200 px-6 py-3 rounded-2xl hover:bg-gray-100 font-medium"
-          >
-            <svg className="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-          
-          <div className="flex gap-3">
-            <button className="px-6 py-3 border border-gray-300 text-gray-700 rounded-2xl font-medium hover:bg-gray-50 transition-colors duration-200">
-              Save as Draft
-            </button>
-            <button
-              onClick={onNext}
-              disabled={uploadedFiles.length === 0}
-              className={`inline-flex items-center px-8 py-4 rounded-2xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
-                uploadedFiles.length > 0
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              Analyze Skills
-              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        {/* Processing Queue Box */}
+        <div className="flex justify-center items-center mt-12 pt-6 border-t border-gray-200">
+          <div className="w-full max-w-xl bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-2xl shadow-lg p-8 flex flex-col items-center">
+            <div className="flex items-center mb-4">
+              <svg className="w-6 h-6 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
               </svg>
-            </button>
+              <span className="text-lg font-semibold text-blue-700">Processing Queue</span>
+            </div>
+            <div className="w-full">
+              {uploadedFiles.length === 0 ? (
+                <p className="text-gray-500 text-center">No files in queue. Please upload resumes to start processing.</p>
+              ) : (
+                <ul className="divide-y divide-blue-100">
+                  {uploadedFiles.map(file => (
+                    <li key={file.id} className="flex items-center justify-between py-2">
+                      <span className="text-gray-700 font-medium truncate max-w-xs">{file.name}</span>
+                      <span className={`ml-4 px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(file.status)}`}>{file.status}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       </div>

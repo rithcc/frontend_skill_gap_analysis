@@ -108,35 +108,26 @@ export default function UploadRequirements({
   }, [selectedFile, onUploadComplete]); // ✅ include onUploadComplete in dependencies
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header with Logo */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="text-lg font-semibold text-gray-900">
-                Upload Requirements
-              </div>
-            </div>
-            <div className="text-sm text-gray-500">Step 4 of 7</div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Upload Requirements
-          </h1>
-          <p className="text-lg text-gray-600">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start font-sans overflow-hidden">
+      {/* Top heading section */}
+      <div className="w-full max-w-5xl px-4 pt-10 pb-6 mx-auto">
+        <div className="text-center w-full">
+          <h2 className="text-2xl font-bold mb-2 text-gray-900">
+            <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              Upload Requirements
+            </span>
+          </h2>
+          <p className="text-base text-gray-600 max-w-1xl mx-auto leading-normal">
             Upload your existing skill requirements document
           </p>
         </div>
+      </div>
 
+      {/* Main Content - two big boxes side by side */}
+      <main className="w-full max-w-4xl px-2 flex flex-col md:flex-row gap-10 items-start justify-center flex-1 mt-6 mx-auto min-h-[calc(100vh-180px)]">
         {/* Upload Area */}
         <div
-          className="bg-white rounded-xl border-2 border-dashed border-gray-300 p-12 text-center hover:border-blue-400 transition-colors cursor-pointer mb-8"
+          className="max-w-sm w-full bg-white rounded-2xl border-2 border-dashed border-gray-300 p-6 text-center hover:border-blue-400 transition-colors cursor-pointer flex flex-col justify-center min-h-[300px] md:min-h-[340px] mx-auto"
           onClick={() => fileInputRef.current?.click()}
         >
           <input
@@ -168,7 +159,7 @@ export default function UploadRequirements({
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
             Drag and drop your files here
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-base text-gray-600 mb-2">
             or click to browse from your computer
           </p>
           <p className="text-sm text-gray-500">
@@ -177,11 +168,31 @@ export default function UploadRequirements({
         </div>
 
         {/* Uploaded Files List */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="max-w-sm w-full bg-white rounded-2xl border border-gray-200 p-6 flex flex-col min-h-[300px] md:min-h-[340px] items-center justify-center mx-auto">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
             Uploaded Files
           </h3>
-          {selectedFile ? (
+          {!selectedFile && (
+            <div className="flex flex-col items-center mb-4">
+              <div className="flex flex-col items-center">
+                <svg
+                  className="w-6 h-6 mb-2 text-gray-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span className="text-sm text-gray-500">No additional files uploaded</span>
+              </div>
+            </div>
+          )}
+          {selectedFile && (
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-3">
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
@@ -225,47 +236,7 @@ export default function UploadRequirements({
                 </svg>
               </button>
             </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <svg
-                className="w-12 h-12 mx-auto mb-3 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <p>No additional files uploaded</p>
-            </div>
           )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            <svg
-              className="mr-2 w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            Back
-          </button>
         </div>
       </main>
     </div>

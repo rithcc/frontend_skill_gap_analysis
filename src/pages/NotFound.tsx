@@ -3,6 +3,9 @@ import { useEffect } from "react";
 
 const NotFound = () => {
   const location = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   useEffect(() => {
     console.error(

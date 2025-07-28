@@ -102,85 +102,72 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
   const [editingCompliance, setEditingCompliance] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [aiGenerating, setAIGenerating] = useState(false);
   const [aiError, setAIError] = useState<string | null>(null);
 
   // Add a Save All button and a function to POST all requirements
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>("idle");
 
   useEffect(() => {
-    // Only use localStorage for requirementsSource, uploadedDocumentId, and selectedRoleId
-    const loadRoleData = async () => {
-      setLoading(true);
-      setError(null);
+    // On mount, call the AI requirements API and fill fields
+    setIsGenerating(true);
+    setLoading(true);
+    setError(null);
+    setAIError(null);
+    const fetchRequirements = async () => {
       try {
-        const storedSource = requirementsSource;
-        const storedDocumentId = uploadedDocumentId;
-        const storedRoleId = localStorage.getItem('selectedRoleId');
-        setRequirementsSource(storedSource);
-
-        if (storedSource === 'uploaded_document' && storedDocumentId) {
-          try {
-            const response = await fetch(`http://localhost:3000/api/v1/upload-requirements/${storedDocumentId}`);
-            if (response.ok) {
-              const profileData = await response.json();
-              setRoleData(profileData);
-              setResponsibilities(profileData.TASKS || []);
-              setEligibility(profileData.SKILLS || []);
-              setResponsibilityText((profileData.TASKS || []).join('\n'));
-              setEligibilityText((profileData.SKILLS || []).join('\n'));
-              setLoading(false);
-              return;
-            } else {
-              setError('Failed to fetch requirements from uploaded document.');
-            }
-          } catch (error) {
-            setError('Error fetching requirement profiles by document.');
-            console.error('Error fetching requirement profiles by document:', error);
-          }
-        } else if (storedSource === 'defined' && storedRoleId) {
-          try {
-            const response = await fetch(`http://localhost:3000/api/v1/roles/${storedRoleId}`);
-            if (response.ok) {
-              const profileData = await response.json();
-              setRoleData(profileData);
-              setResponsibilities(profileData.TASKS || []);
-              setEligibility(profileData.SKILLS || []);
-              setResponsibilityText((profileData.TASKS || []).join('\n'));
-              setEligibilityText((profileData.SKILLS || []).join('\n'));
-              setLoading(false);
-              return;
-            } else {
-              setError('Failed to fetch requirements for selected role.');
-            }
-          } catch (error) {
-            setError('Error fetching requirement profiles by role.');
-            console.error('Error fetching requirement profiles by role:', error);
-          }
-        } else {
-          // If neither, clear data
-          setRoleData(null);
-          setResponsibilities([]);
-          setEligibility([]);
-          setResponsibilityText('');
-          setEligibilityText('');
-          setLoading(false);
-        }
-      } catch (error) {
-        setError('Error loading role data.');
-        console.error('Error loading role data:', error);
+        const payload = {
+          role_name: localStorage.getItem('selectedRoleName') || '',
+          industry: 'Automotive',
+          experience_level: 'Mid-level',
+          department: '',
+          additional_context: ''
+        };
+        const response = await fetch('http://localhost:8001/generate-requirements', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) throw new Error('Failed to generate requirements with AI');
+        const aiData = await response.json();
+        setRoleData((prev) => ({
+          ...prev,
+          TASKS: aiData.responsibilities?.map((r) => r.description) || [],
+          SKILLS: aiData.eligibility?.map((e) => e.description) || [],
+          TOOLS: aiData.tools_and_technologies
+            ?.filter((t) => t.category === 'Tool')
+            .map((t) => ({
+              name: t.name,
+              priority: t.priority === 'Critical' ? 'High' : (t.priority || 'High'),
+              type: 'Tool',
+            })) || [],
+          TECHNOLOGIES: aiData.tools_and_technologies
+            ?.filter((t) => t.category !== 'Tool')
+            .map((t) => ({
+              name: t.name,
+              priority: t.priority === 'Critical' ? 'High' : (t.priority || 'High'),
+              type: 'Technology',
+            })) || [],
+          COMPLIANCES: aiData.compliance?.map((c) => ({
+            name: c.name,
+            priority: c.priority === 'Critical' ? 'High' : (c.priority || 'High'),
+          })) || [],
+        }));
+        setResponsibilities(aiData.responsibilities?.map((r) => r.description) || []);
+        setEligibility(aiData.eligibility?.map((e) => e.description) || []);
+        setResponsibilityText((aiData.responsibilities?.map((r) => r.description) || []).join('\n'));
+        setEligibilityText((aiData.eligibility?.map((e) => e.description) || []).join('\n'));
+        setIsGenerating(false);
+        setLoading(false);
+      } catch (err) {
+        let message = 'AI generation failed';
+        if (err instanceof Error) message = err.message;
+        setAIError(message);
+        setIsGenerating(false);
         setLoading(false);
       }
     };
-
-    // Simulate AI generation process
-    const timer = setTimeout(() => {
-      setIsGenerating(false);
-      loadRoleData();
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [requirementsSource, uploadedDocumentId]);
+    fetchRequirements();
+  }, []);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -328,98 +315,46 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
     }
   };
 
-  // Function to call FastAPI LLM service and populate requirements
-  const generateRequirementsWithAI = async () => {
-    setAIGenerating(true);
-    setAIError(null);
-    try {
-      const payload = {
-        role_name: roleData?.ROLE_NAME || selectedRoleName || "",
-        industry: "Automotive", // or get from user/context
-        experience_level: "Mid-level",
-        department: "", // optional
-        additional_context: "" // optional
-      };
-      const response = await fetch("http://localhost:8001/generate-requirements", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) throw new Error("Failed to generate requirements with AI");
-      const aiData: AIRequirementsResponse = await response.json();
-
-      setRoleData((prev) => ({
-        ...prev,
-        TASKS: aiData.responsibilities?.map((r: AIRoleRequirement) => r.description) || [],
-        SKILLS: aiData.eligibility?.map((e: AIEligibility) => e.description) || [],
-        TOOLS: aiData.tools_and_technologies
-          ?.filter((t: AIToolTechnology) => t.category === "Tool")
-          .map((t: AIToolTechnology) => ({
-            name: t.name,
-            priority: t.priority === "Critical" ? "High" : (t.priority as 'High' | 'Medium' | 'Low') || 'High',
-            type: "Tool"
-          })) || [],
-        TECHNOLOGIES: aiData.tools_and_technologies
-          ?.filter((t: AIToolTechnology) => t.category !== "Tool")
-          .map((t: AIToolTechnology) => ({
-            name: t.name,
-            priority: t.priority === "Critical" ? "High" : (t.priority as 'High' | 'Medium' | 'Low') || 'High',
-            type: "Technology"
-          })) || [],
-        COMPLIANCES: aiData.compliance?.map((c: AICompliance) => ({
-          name: c.name,
-          priority: c.priority === "Critical" ? "High" : (c.priority as 'High' | 'Medium' | 'Low') || 'High',
-        })) || [],
-      }));
-      setResponsibilities(aiData.responsibilities?.map((r: AIRoleRequirement) => r.description) || []);
-      setEligibility(aiData.eligibility?.map((e: AIEligibility) => e.description) || []);
-      setResponsibilityText((aiData.responsibilities?.map((r: AIRoleRequirement) => r.description) || []).join("\n"));
-      setEligibilityText((aiData.eligibility?.map((e: AIEligibility) => e.description) || []).join("\n"));
-      setAIGenerating(false);
-    } catch (err: unknown) {
-      let message = "AI generation failed";
-      if (err instanceof Error) message = err.message;
-      setAIError(message);
-      setAIGenerating(false);
-    }
-  };
+  // Removed manual AI generation function
 
   if (isGenerating || loading) {
     return (
-      <div className="max-w-7xl mx-auto">
-        
-        <div className="text-center mb-16">
-          <div className="w-16 h-16 bg-modern-blue rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Brain className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Generating <span className="modern-blue">Comprehensive Requirements</span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-12">
-            Our AI is analyzing your role to create complete requirements framework including tools, responsibilities, eligibility, and compliance
-          </p>
-
-          <div className="max-w-md mx-auto">
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <div className="flex items-center justify-center mb-6">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Analyzing role requirements...</span>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="max-w-7xl w-full">
+          <div className="text-center mb-12 font-sans">
+            <div className="w-16 h-16 bg-modern-blue rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Brain className="w-8 h-8 text-white animate-spin" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2 text-gray-900">
+              <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                Generating Comprehensive Requirements
+              </span>
+            </h2>
+            <p className="text-base text-gray-600 max-w-2xl mx-auto leading-normal mb-8">
+              Our AI is analyzing your role to create a complete requirements framework including tools, responsibilities, eligibility, and compliance.
+            </p>
+            <div className="max-w-md mx-auto">
+              <div className="bg-white rounded-2xl p-8 shadow-lg">
+                <div className="flex items-center justify-center mb-6">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-600">Generating tools and technologies...</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-600">Creating responsibilities framework...</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                  <span className="text-sm text-gray-400">Finalizing compliance requirements...</span>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm text-gray-600">Analyzing role requirements...</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-gray-600">Generating tools and technologies...</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-gray-600">Creating responsibilities framework...</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    <span className="text-sm text-gray-400">Finalizing compliance requirements...</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -450,40 +385,21 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* AI Generate Button - Centered */}
-      <div className="flex justify-center mb-8">
-        <Button
-          onClick={generateRequirementsWithAI}
-          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all flex items-center gap-2"
-          disabled={aiGenerating}
-        >
-          {aiGenerating && <Loader2 className="animate-spin w-5 h-5" />}
-          Generate Requirements with AI
-        </Button>
-      </div>
+      {/* Error from LLM generation */}
       {aiError && (
         <div className="mb-4 text-red-600 text-center font-medium">{aiError}</div>
       )}
       {/* Header */}
       <div className="flex items-center justify-center mb-8">
       </div>
-      
-      <div className="text-center mb-12">
-        <div className="w-16 h-16 bg-modern-blue rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <FileText className="w-8 h-8 text-white" />
-        </div>
-        <h1 className="text-5xl font-bold text-gray-900 mb-4">
-          Role Requirements for <span className="modern-blue">
-            {roleData?.ROLE_NAME || localStorage.getItem('selectedRoleName') || 'Selected Role'}
-          </span>
-        </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-4">
-          Comprehensive skill requirements and responsibilities framework
-        </p>
-        
+      {/* Move heading to the very top, remove subtitle, and keep requirements source indicator */}
+      <div className="text-center font-sans mt-4 mb-6">
+        <h2 className="text-2xl font-bold mb-2 text-black">
+          Role Requirements for {roleData?.ROLE_NAME || localStorage.getItem('selectedRoleName') || 'Selected Role'}
+        </h2>
         {/* Requirements Source Indicator */}
         {requirementsSource && (
-          <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium mb-6 ${
+          <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium mt-2 ${
             requirementsSource === 'uploaded_document' 
               ? 'bg-green-100 text-green-800 border border-green-200' 
               : 'bg-blue-100 text-blue-800 border border-blue-200'
@@ -496,19 +412,19 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
             ) : (
               <>
                 <Settings className="w-4 h-4 mr-2" />
-                Requirements defined manually
+                AI Defined Requirements
               </>
             )}
           </div>
         )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid lg:grid-cols-2 gap-8 mb-8 mt-8">
         {/* Left Column - Responsibilities & Eligibility (Bigger Boxes) */}
-        <div className="space-y-8">
+        <div className="space-y-8 mt-0">
           {/* Responsibilities */}
-          <Card className="p-8 bg-white shadow-lg border border-gray-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+          <Card className="p-6 bg-white border border-gray-200 text-base">
+            <h3 className="text-lg font-bold text-black mb-4 flex items-center">
               <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
@@ -530,8 +446,8 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
           </Card>
 
           {/* Eligibility Criteria */}
-          <Card className="p-8 bg-white shadow-lg border border-gray-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+          <Card className="p-6 bg-white border border-gray-200 text-base">
+            <h3 className="text-lg font-bold text-black mb-4 flex items-center">
               <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
                 <UserCheck className="w-5 h-5 text-white" />
               </div>
@@ -554,10 +470,10 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
         </div>
 
         {/* Right Column - Tools, Technologies & Compliance */}
-        <div className="space-y-8">
+        <div className="space-y-8 mt-0">
           {/* Tools & Technologies */}
-          <Card className="p-8 bg-white shadow-lg border border-gray-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+          <Card className="p-6 bg-white border border-gray-200 text-base">
+            <h3 className="text-lg font-bold text-black mb-4 flex items-center">
               <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
                 <Wrench className="w-5 h-5 text-white" />
               </div>
@@ -746,8 +662,8 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
           </Card>
 
           {/* Compliance Requirements */}
-          <Card className="p-8 bg-white shadow-lg border border-gray-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+          <Card className="p-6 bg-white border border-gray-200 text-base">
+            <h3 className="text-lg font-bold text-black mb-4 flex items-center">
               <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mr-3">
                 <Shield className="w-5 h-5 text-white" />
               </div>
@@ -879,12 +795,12 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
           </Button>
           <Button 
             onClick={() => {
-              // Navigate to Requirements Builder
-              if (onNext) {
+              if (saveStatus === 'success' && onNext) {
                 onNext();
               }
             }}
             className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white"
+            disabled={saveStatus !== 'success'}
           >
             Continue to Requirements Builder
             <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

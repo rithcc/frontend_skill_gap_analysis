@@ -118,17 +118,24 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
         if (responseData.professional_summary) {
           textParts.push('=== PROFESSIONAL SUMMARY ===');
           const ps = responseData.professional_summary;
-          if (ps['Key Strengths']) {
+          // Support both snake_case and UI camelCase keys
+          const keyStrengths = ps['Key Strengths'] ?? ps['key_strengths'];
+          const recentLearning = ps['Recent Learning'] ?? ps['recent_learning'];
+          if (keyStrengths) {
             textParts.push('Key Strengths:');
-            if (Array.isArray(ps['Key Strengths'])) {
-              ps['Key Strengths'].forEach((strength: string) => textParts.push(`- ${strength}`));
+            if (Array.isArray(keyStrengths)) {
+              keyStrengths.forEach((strength: string) => textParts.push(`- ${strength}`));
             } else {
-              textParts.push(`- ${ps['Key Strengths']}`);
+              textParts.push(`- ${keyStrengths}`);
             }
           }
-          if (ps['Recent Learning'] && ps['Recent Learning'].length > 0) {
+          if (recentLearning && recentLearning.length > 0) {
             textParts.push('Recent Learning:');
-            ps['Recent Learning'].forEach((learning: string) => textParts.push(`- ${learning}`));
+            if (Array.isArray(recentLearning)) {
+              recentLearning.forEach((learning: string) => textParts.push(`- ${learning}`));
+            } else {
+              textParts.push(`- ${recentLearning}`);
+            }
           }
           textParts.push('');
         }
@@ -230,11 +237,36 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
     // Also store the structured resume data if available
     const structuredData = processedFiles
       .filter(pf => pf.extractedText && pf.originalApiResponse)
-      .map(pf => ({
-        fileName: pf.file.name,
-        extractedText: pf.extractedText,
-        ...pf.originalApiResponse // Spread the original API response
-      }));
+      .map(pf => {
+        // Patch professional_summary to always have UI keys
+        const patchedApiResponse = { ...pf.originalApiResponse };
+        if (patchedApiResponse.professional_summary) {
+          const ps = patchedApiResponse.professional_summary;
+          if (
+            ps['Key Strengths'] === undefined &&
+            ps['key_strengths'] !== undefined
+          ) {
+            ps['Key Strengths'] = ps['key_strengths'];
+          }
+          if (
+            ps['Recent Learning'] === undefined &&
+            ps['recent_learning'] !== undefined
+          ) {
+            ps['Recent Learning'] = ps['recent_learning'];
+          }
+          if (
+            ps['PDLC Phases'] === undefined &&
+            ps['pdlc_phases'] !== undefined
+          ) {
+            ps['PDLC Phases'] = ps['pdlc_phases'];
+          }
+        }
+        return {
+          fileName: pf.file.name,
+          extractedText: pf.extractedText,
+          ...patchedApiResponse
+        };
+      });
     
     localStorage.setItem('structuredResumeData', JSON.stringify(structuredData));
     console.log('[processAllResumes] Structured data saved:', structuredData);
@@ -294,7 +326,7 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
     const extractedTexts = processedFiles
       .filter(pf => pf.extractedText)
       .map(pf => pf.extractedText);
-      
+    
     console.log("Analyzing team intelligence with uploaded files:", uploadedFiles);
     console.log("Processed files:", processedFiles);
     console.log("Extracted texts:", extractedTexts);
@@ -312,6 +344,8 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
     
     console.log('[handleAnalyze] Final data saved to localStorage, proceeding to next step');
     
+    // Scroll to top before navigating
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     // Call onNext to proceed to the next step (EmployeeSkillCards)
     if (onNext) {
       onNext();
@@ -319,18 +353,10 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="text-center mb-16">
-        <div className="w-16 h-16 bg-modern-blue rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <Brain className="w-8 h-8 text-white" />
-        </div>
-        <h1 className="text-5xl font-bold text-gray-900 mb-6">
-          Upload <span className="modern-blue">Team Data</span>
-        </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          Upload team profiles to unleash AI-powered skill gap analysis. Our intelligent system 
-          will process and analyze capabilities against your defined framework.
-        </p>
+    <div className="max-w-6xl mx-auto font-sans text-base">
+      <div className="text-center mb-12">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Team Resume Upload</h1>
+        <p className="text-sm text-gray-600">Upload and analyze your team's resumes for comprehensive skill assessment</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8 mb-12">
@@ -345,7 +371,6 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
               <p className="text-gray-600 text-sm">Resume processing</p>
             </div>
           </div>
-          
           <div className="relative group">
             <div className="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center hover:border-modern-blue transition-all duration-300 bg-gray-50 group-hover:bg-blue-50">
               <div className="w-16 h-16 bg-modern-blue rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
@@ -357,7 +382,6 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
               <p className="text-sm text-gray-500 mb-6">
                 PDF, DOC, DOCX • Max 10MB each • Batch upload supported
               </p>
-              
               <input
                 type="file"
                 multiple
@@ -367,33 +391,15 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
                 id="file-upload"
                 ref={fileInputRef}
               />
-              
-              <Button asChild className="bg-modern-blue hover:bg-modern-blue/90 text-white border-0 px-8 py-3 rounded-xl">
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  Select Files
-                </label>
-              </Button>
+              <div className="flex justify-center">
+                <Button asChild className="bg-modern-blue hover:bg-modern-blue/90 text-white border-0 px-8 py-3 rounded-xl">
+                  <label htmlFor="file-upload" className="cursor-pointer">
+                    Select Files
+                  </label>
+                </Button>
+              </div>
             </div>
-          </div>
-
-          <div className="flex justify-between mt-6">
-            <Button variant="outline" className="flex items-center border-gray-300 hover:border-gray-400 text-gray-700">
-              <Plus className="w-4 h-4 mr-2" />
-              <label htmlFor="file-upload" className="cursor-pointer">Add More</label>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400"
-              onClick={() => {
-                setUploadedFiles([]);
-                setProcessedFiles([]);
-                setSelectedResumeIndex(null);
-                setCombinedResumeText('');
-              }}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Clear All
-            </Button>
+            {/* No Launch AI Analysis button here, moved to Processing Queue */}
           </div>
         </Card>
 
@@ -422,69 +428,88 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
               <p className="text-sm text-gray-400 mt-2">Upload team profiles to begin analysis</p>
             </div>
           ) : (
-            <div className="space-y-3 max-h-72 overflow-y-auto">
-              {uploadedFiles.map((file, index) => {
-                const processedFile = processedFiles.find(pf => pf.file === file);
-                const isSelected = selectedResumeIndex === index;
-                const isProcessing = processedFile?.isProcessing || false;
-                const hasText = processedFile?.extractedText;
-                
-                return (
-                  <div 
-                    key={index}
-                    className={`group flex items-center justify-between p-4 rounded-xl border transition-all duration-300 cursor-pointer ${
-                      isSelected 
-                        ? 'bg-blue-50 border-blue-300 shadow-md' 
-                        : 'bg-gray-50 border-gray-200 hover:border-modern-blue hover:bg-blue-25'
-                    }`}
-                    onClick={() => handleResumeClick(index)}
-                  >
-                    <div className="flex items-center flex-1">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${
-                        hasText ? 'bg-green-500' : 'bg-modern-blue'
-                      }`}>
-                        {isProcessing ? (
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : hasText ? (
-                          <CheckCircle className="w-5 h-5 text-white" />
-                        ) : (
-                          <FileText className="w-5 h-5 text-white" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-gray-900">
-                          {file.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {(file.size / 1024 / 1024).toFixed(2)} MB • 
-                          {isProcessing ? ' Processing...' : hasText ? ' Resume processed' : ' Ready for processing'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {hasText && (
-                        <div className="flex items-center text-blue-600">
-                          <Eye className="w-4 h-4 mr-1" />
-                          <span className="text-xs font-medium">View</span>
+            <>
+              <div className="space-y-3 max-h-72 overflow-y-auto">
+                {uploadedFiles.map((file, index) => {
+                  const processedFile = processedFiles.find(pf => pf.file === file);
+                  const isSelected = selectedResumeIndex === index;
+                  const isProcessing = processedFile?.isProcessing || false;
+                  const hasText = processedFile?.extractedText;
+                  return (
+                    <div 
+                      key={index}
+                      className={`group flex items-center justify-between p-4 rounded-xl border transition-all duration-300 cursor-pointer ${
+                        isSelected 
+                          ? 'bg-blue-50 border-blue-300 shadow-md' 
+                          : 'bg-gray-50 border-gray-200 hover:border-modern-blue hover:bg-blue-25'
+                      }`}
+                      onClick={() => handleResumeClick(index)}
+                    >
+                      <div className="flex items-center flex-1">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${
+                          hasText ? 'bg-green-500' : 'bg-modern-blue'
+                        }`}>
+                          {isProcessing ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : hasText ? (
+                            <CheckCircle className="w-5 h-5 text-white" />
+                          ) : (
+                            <FileText className="w-5 h-5 text-white" />
+                          )}
                         </div>
-                      )}
-                      <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${isSelected ? 'rotate-90' : ''}`} />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeFile(index);
-                        }}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB • 
+                            {isProcessing ? ' Processing...' : hasText ? ' Resume processed' : ' Ready for processing'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {hasText && (
+                          <div className="flex items-center text-blue-600">
+                            <Eye className="w-4 h-4 mr-1" />
+                            <span className="text-xs font-medium">View</span>
+                          </div>
+                        )}
+                        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${isSelected ? 'rotate-90' : ''}`} />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFile(index);
+                          }}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+              {/* Launch AI Analysis button at the end of the box */}
+          {uploadedFiles.length > 0 && (
+            <div className="flex justify-center mt-8">
+              <Button 
+                onClick={handleAnalyze}
+                className="bg-modern-blue hover:bg-modern-blue/90 text-white px-12 py-3 rounded-xl font-semibold disabled:opacity-50"
+                disabled={(() => {
+                  const count = processedFiles.filter(pf => pf.extractedText).length;
+                  return count === 0;
+                })()}
+              >
+                <div className="flex items-center">
+                  <Zap className="w-5 h-5 mr-2" />
+                  Launch AI Analysis ({processedFiles.filter(pf => pf.extractedText).length} ready)
+                </div>
+              </Button>
             </div>
+          )}
+            </>
           )}
         </Card>
       </div>
@@ -531,39 +556,7 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
         </Card>
       )}
 
-      {/* Navigation */}
-      <div className="flex justify-between items-center">
-        <Button 
-          variant="outline"
-          className="border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-3"
-          onClick={onBack}
-        >
-          ← Back
-        </Button>
-        
-        <div className="flex gap-4">
-          <Button 
-            variant="outline"
-            className="border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-3"
-          >
-            Save Progress
-          </Button>
-          <Button 
-            onClick={handleAnalyze}
-            className="bg-modern-blue hover:bg-modern-blue/90 text-white px-12 py-3 rounded-xl font-semibold disabled:opacity-50"
-            disabled={(() => {
-              const count = processedFiles.filter(pf => pf.extractedText).length;
-              console.log(`[Button] Processed files with text: ${count}, Button disabled: ${count === 0}`);
-              return count === 0;
-            })()}
-          >
-            <div className="flex items-center">
-              <Zap className="w-5 h-5 mr-2" />
-              Launch AI Analysis ({processedFiles.filter(pf => pf.extractedText).length} ready)
-            </div>
-          </Button>
-        </div>
-      </div>
+      {/* Navigation removed as per request */}
     </div>
   );
 };
