@@ -371,6 +371,42 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
         </div>
       </div>
 
+      {/* See Employee Card or Skip to Analysis Progress */}
+      {uploadedFiles.length >= 2 && uploadedFiles.some(f => f.status === 'completed') && (
+        <div className="flex justify-center items-center mt-12">
+          <div className="w-full max-w-xl bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-2xl shadow-lg p-8 flex flex-col items-center">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">See Employee Card</h3>
+            <p className="text-gray-700 mb-6 text-center max-w-xl">You have uploaded multiple resumes. You can view the employee card for a processed resume, or skip directly to team analysis progress.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg"
+                onClick={() => {
+                  // Go to next page (EmployeeSkillCards)
+                  if (typeof window !== 'undefined') {
+                    // Simulate navigation: you may want to call onNext or use router
+                    if (typeof onNext === 'function') onNext();
+                  }
+                }}
+              >
+                See Employee Card
+              </button>
+              <button
+                className="px-8 py-3 rounded-xl font-semibold text-blue-700 border border-blue-400 bg-white hover:bg-blue-50 transition-all duration-300 shadow"
+                onClick={() => {
+                  // Skip to analysis progress (simulate by scrolling to Processing Queue)
+                  const el = document.getElementById('processing-queue-box');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              >
+                Skip to Analysis Progress
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
@@ -387,6 +423,6 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
           background: #94a3b8;
         }
       `}</style>
-    </div>
+    </div>      
   );
 }

@@ -30,6 +30,8 @@ export default function SGAAnalysis({ onBack, onNext }: SGAAnalysisProps) {
   });
 
   const [skillGapMembers, setSkillGapMembers] = useState<Member[]>([]);
+  // Button enabled only when a member row is selected
+  const [walkEnabled, setWalkEnabled] = useState(false);
 
   // Load dynamic data from localStorage on component mount
   useEffect(() => {
@@ -204,10 +206,10 @@ export default function SGAAnalysis({ onBack, onNext }: SGAAnalysisProps) {
     <div className="max-w-7xl mx-auto p-6">
         {/* Centered Title and Description */}
         <div className="mb-8 flex flex-col items-center justify-center">
-          <h1 className="text-3xl font-bold text-black text-center mb-2">
+          <h1 className="text-2xl font-bold text-black text-center mb-2">
             Team Skill Gap Analysis
           </h1>
-          <p className="text-base text-gray-700 text-center max-w-2xl mb-2">
+          <p className="text-sm text-gray-700 text-center max-w-2xl mb-2">
             Comprehensive skill gap analysis for your team.
           </p>
         </div>
@@ -218,8 +220,8 @@ export default function SGAAnalysis({ onBack, onNext }: SGAAnalysisProps) {
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-purple-400/10 rounded-full translate-y-12 -translate-x-12"></div>
             <div className="relative flex flex-col items-center justify-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">Team Readiness Overview</h2>
-              <span className="text-base text-gray-600 mb-8 text-center">Current skill alignment for {roleName} role</span>
+              <h2 className="text-base font-bold text-gray-900 mb-2 text-center">Team Readiness Overview</h2>
+              <span className="text-sm text-gray-600 mb-8 text-center">Current skill alignment for {roleName} role</span>
               {/* KPIs horizontal alignment */}
               <div className="flex flex-row items-stretch justify-center gap-8 mb-8">
                 {/* Role Ready */}
@@ -659,7 +661,10 @@ export default function SGAAnalysis({ onBack, onNext }: SGAAnalysisProps) {
                     key={idx}
                     className={`grid grid-cols-7 gap-6 w-full rounded-xl border border-gray-200 bg-white p-4 shadow-sm cursor-pointer transition-all duration-200 items-center
                       ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50 shadow-lg' : 'hover:ring-2 hover:ring-blue-300'}`}
-                    onClick={() => setSelectedBox({ row: idx, col: 0 })}
+                    onClick={() => {
+                      setSelectedBox({ row: idx, col: 0 });
+                      setWalkEnabled(true);
+                    }}
                   >
                     <div className="font-semibold text-blue-700 text-sm underline min-w-[120px] text-left">{member.name}</div>
                     {member.skills.map((gap, skillIdx) => (
@@ -717,8 +722,13 @@ export default function SGAAnalysis({ onBack, onNext }: SGAAnalysisProps) {
               Back
             </Button>
             <Button
-              onClick={() => onNext && onNext()}
-              className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors cursor-pointer shadow-lg"
+              disabled={!walkEnabled}
+              onClick={() => {
+                if (walkEnabled && onNext) {
+                  onNext();
+                }
+              }}
+              className={`inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg transition-colors cursor-pointer shadow-lg ${walkEnabled ? 'hover:bg-blue-700' : 'opacity-50 cursor-not-allowed'}`}
             >
               Walk through Individual Skill Gaps
               <svg

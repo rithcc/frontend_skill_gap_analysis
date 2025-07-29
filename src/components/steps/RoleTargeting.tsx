@@ -128,7 +128,7 @@ const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice, onBack
             Select Target Role
           </span>
         </h2>
-        <p className="text-base text-gray-600 max-w-1xl mx-auto leading-normal">
+        <p className="text-sm text-gray-600 max-w-1xl mx-auto leading-normal">
           Choose the role you want to analyze for skill gaps
         </p>
       </div>
@@ -199,7 +199,7 @@ const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice, onBack
                 <div className="flex items-center mb-2">
                   <div className="flex items-center space-x-2">
                     <div className={`w-3 h-3 rounded-full ${selectedCard === role.title ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                    <h3 className="text-xl font-semibold text-gray-900">{role.title}</h3>
+                    <h3 className="text-base font-semibold text-gray-900">{role.title}</h3>
                   </div>
                   <div className="flex items-center ml-4 space-x-2">
                     {role.tags.map((tag, index) => (
@@ -210,7 +210,7 @@ const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice, onBack
                   </div>
                 </div>
 
-                <p className="text-gray-600 mb-4 leading-relaxed">
+                <p className="text-xs text-gray-600 mb-4 leading-relaxed">
                   {role.description}
                 </p>
 
@@ -245,7 +245,18 @@ const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice, onBack
       </div>
 
       {/* Requirements Section - Show as modal popup when a role is clicked */}
-      <Dialog open={showRequirements} onOpenChange={setShowRequirements}>
+      <Dialog
+        open={showRequirements}
+        onOpenChange={(open) => {
+          // Only reset hasRequirements if opening, not closing
+          if (open) {
+            setShowRequirements(true);
+            setHasRequirements(null);
+          } else {
+            setShowRequirements(false);
+          }
+        }}
+      >
         {showRequirements && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
             <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-lg mx-auto relative">

@@ -1,13 +1,10 @@
-
-
-
-'use client';
 import React, { useState, useEffect } from "react"
 
 interface AnalysisProgressProps {
   onNext?: () => void;
   onBack?: () => void;
 }
+
 
 export default function AnalysisProgress({ onNext, onBack }: AnalysisProgressProps) {
   const [progress, setProgress] = useState(0);
@@ -23,6 +20,14 @@ export default function AnalysisProgress({ onNext, onBack }: AnalysisProgressPro
     { id: 8, name: 'Skill gap analysis', completed: false, active: false },
     { id: 9, name: 'Generating skill gap scores', completed: false, active: false }
   ]);
+
+  // Ensure parent header back button always goes to ResumeUpload (step 6)
+  useEffect(() => {
+    localStorage.setItem('analysisProgressActive', 'true');
+    return () => {
+      localStorage.removeItem('analysisProgressActive');
+    };
+  }, []);
 
   // Simulate analysis progress for demo purposes
   useEffect(() => {

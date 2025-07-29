@@ -437,9 +437,12 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
       <div className="max-w-7xl mx-auto w-full">
         {/* Centered Header */}
         <div className="mb-8 flex flex-col items-center">
-          <h1 className="text-3xl font-semibold text-black text-center font-sans">
+        <h1 className="text-2xl font-bold mb-2 text-black">
             Requirement Builder
-          </h1>
+        </h1>
+        <p className="text-sm text-gray-600 max-w-xl mx-auto leading-normal mb-2 text-center">
+          Define and review the requirements for your selected role. Adjust experience, competence, timeline, budget, and skill focus areas before proceeding to analysis.
+        </p>
           {loadingSkills && (
             <div className="flex flex-col items-center mt-2">
               <div className="relative mb-2">
@@ -465,19 +468,19 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
           <div className="lg:col-span-2 space-y-6">
             {/* Experience Level */}
             <Card className="bg-white border border-gray-200">
-              <div className="flex items-center gap-3 p-6 pb-0">
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <div className="flex items-center gap-3 p-4 pb-0">
+                <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center">
                   {/* Briefcase icon for experience */}
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 12h4m-7 8h10a2 2 0 002-2V8a2 2 0 00-2-2h-3V5a2 2 0 00-2-2h-2a2 2 0 00-2 2v1H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-black">Experience Level</h3>
-                  <p className="text-gray-600">How many years of hands-on experience are required?</p>
+                  <h3 className="text-sm font-bold text-black">Experience Level</h3>
+                  <p className="text-xs text-gray-600">How many years of hands-on experience are required?</p>
                 </div>
               </div>
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
                     {experienceLevels.map((level, index) => (
@@ -490,8 +493,8 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                             : `${level.color} border opacity-80 hover:bg-gray-200 hover:opacity-100`}
                         `}
                       >
-                        <div className="text-sm font-semibold">{level.label}</div>
-                        <div className="text-xs mt-1 opacity-75">Level {index + 1}</div>
+                        <div className="text-xs font-semibold">{level.label}</div>
+                        <div className="text-[10px] mt-1 opacity-75">Level {index + 1}</div>
                       </button>
                     ))}
                   </div>
@@ -508,7 +511,7 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                         : 'bg-red-100 border-red-200 text-red-700'
                     }`}
                   >
-                    <div className="text-sm">
+                    <div className="text-xs">
                       <span className="font-semibold">Current selection:</span> {experienceLabels[skillExperience]}
                     </div>
                   </div>
@@ -517,20 +520,20 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
             </Card>
 
             {/* Skill Competence */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-black">Skill Competence</h3>
-                  <p className="text-gray-600">What depth of knowledge is expected?</p>
+                  <h3 className="text-sm font-bold text-black">Skill Competence</h3>
+                  <p className="text-xs text-gray-600">What depth of knowledge is expected?</p>
                 </div>
               </div>
               
-              <div className="grid grid-cols-5 gap-3 mb-6">
+              <div className="grid grid-cols-5 gap-2 mb-4">
                 {competenceLevels.map((level) => (
                   <button
                     key={level.value}
@@ -541,18 +544,18 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                         : level.color + ' hover:bg-gray-200'
                     }`}
                   >
-                    <div className="text-sm font-semibold">{level.value}</div>
-                    <div className="text-xs mt-1 opacity-75">Level {level.level}</div>
+                    <div className="text-xs font-semibold">{level.value}</div>
+                    <div className="text-[10px] mt-1 opacity-75">Level {level.level}</div>
                   </button>
                 ))}
               </div>
 
               {/* Detailed Skill Competence Sliders */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="font-semibold text-black mb-4">Detailed Competence Levels</h4>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h4 className="font-semibold text-black mb-2 text-xs">Detailed Competence Levels</h4>
                   
                 {skillCategories.length > 0 ? (
-                  <div className="space-y-6">
+                    <div className="space-y-4">
                     {skillCategories.map((category) => (
                       <SkillLevelDisplay 
                         key={category.type}
@@ -570,7 +573,7 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                   </div>
                 ) : (
                   !loadingSkills && (
-                    <div className="text-center py-4 text-gray-500">
+                    <div className="text-center py-2 text-gray-500 text-xs">
                       No skill categories available. Please ensure skills are properly defined.
                     </div>
                   )
@@ -580,18 +583,18 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
 
             {/* Timeline & Budget */}
             <Card className="bg-white border border-gray-200">
-              <div className="flex items-center gap-3 p-6 pb-0">
-                <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-3 p-4 pb-0">
+                <div className="w-8 h-8 bg-yellow-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-black">Project Parameters</h3>
-                  <p className="text-gray-600">Set the expected timeline and budget for this role or project.</p>
+                  <h3 className="text-sm font-bold text-black">Project Parameters</h3>
+                  <p className="text-xs text-gray-600">Set the expected timeline and budget for this role or project.</p>
                 </div>
               </div>
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <label className="text-sm font-medium text-gray-700">Timeline (months)</label>
@@ -605,9 +608,9 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                           onChange={(e) => setTimeline(Number(e.target.value))}
                           className="flex-1 h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer"
                         />
-                        <span className="text-lg font-bold text-amber-700 min-w-[3rem]">{timeline}m</span>
+                        <span className="text-xs font-bold text-amber-700 min-w-[2rem]">{timeline}m</span>
                       </div>
-                      <div className="flex justify-between text-xs text-amber-600">
+                      <div className="flex justify-between text-[10px] text-amber-600">
                         <span>1m</span>
                         <span>12m</span>
                         <span>24m</span>
@@ -627,9 +630,9 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                           onChange={(e) => setBudget(Number(e.target.value))}
                           className="flex-1 h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer"
                         />
-                        <span className="text-lg font-bold text-amber-700 min-w-[4rem]">${budget.toLocaleString()}</span>
+                        <span className="text-xs font-bold text-amber-700 min-w-[3rem]">${budget.toLocaleString()}</span>
                       </div>
-                      <div className="flex justify-between text-xs text-amber-600">
+                      <div className="flex justify-between text-[10px] text-amber-600">
                         <span>$5K</span>
                         <span>$50K</span>
                         <span>$100K</span>
@@ -644,60 +647,60 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
           {/* Right Column - Preview */}
           <div className="space-y-6">
             <Card className="bg-white border border-gray-200">
-              <div className="flex items-center gap-3 p-6 pb-0">
-                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-3 p-4 pb-0">
+                <div className="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4h4m0 0V7m0 4l-4-4-4 4" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-black">Requirements Preview</h3>
-                  <p className="text-gray-600">Review all selected requirements before continuing to analysis.</p>
+                  <h3 className="text-base font-bold text-black">Requirements Preview</h3>
+                  <p className="text-xs text-gray-600">Review all selected requirements before continuing to analysis.</p>
                 </div>
               </div>
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="space-y-4">
-                  <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-                    <h4 className="font-semibold text-black mb-2 flex items-center gap-2">
-                      <span className="text-sm">🎯</span>
-                      Experience Level
+                  <div className="p-2 bg-indigo-50 rounded-lg border border-indigo-200">
+                    <h4 className="font-semibold text-black mb-1 flex items-center gap-2 text-xs">
+                      <span>🎯</span>
+                    <span className="text-sm font-bold text-black">Experience Level</span>
                     </h4>
-                    <p className="text-sm text-indigo-700 font-medium">{experienceLabels[skillExperience]}</p>
+                    <p className="text-xs text-indigo-700 font-medium">{experienceLabels[skillExperience]}</p>
                   </div>
                   
-                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                    <h4 className="font-semibold text-black mb-2 flex items-center gap-2">
-                      <span className="text-sm">⭐</span>
-                      Competence Required
+                  <div className="p-2 bg-purple-50 rounded-lg border border-purple-200">
+                    <h4 className="font-semibold text-black mb-1 flex items-center gap-2 text-xs">
+                      <span>⭐</span>
+                    <span className="text-sm font-bold text-black">Competence Required</span>
                     </h4>
-                    <p className="text-sm text-purple-700 font-medium">{skillCompetence}</p>
+                    <p className="text-xs text-purple-700 font-medium">{skillCompetence}</p>
                   </div>
                   
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h4 className="font-semibold text-black mb-3 flex items-center gap-2">
-                      <span className="text-sm">📊</span>
-                      Skill Focus Areas
+                  <div className="p-2 bg-blue-50 rounded-lg border border-blue-200">
+                    <h4 className="font-semibold text-black mb-1 flex items-center gap-2 text-xs">
+                      <span>📊</span>
+                    <span className="text-sm font-bold text-black">Skill Focus Areas</span>
                     </h4>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-1 text-xs">
                       {skillCategories.length === 0 ? (
                         <div className="text-gray-400 italic">No skill focus areas available.</div>
                       ) : (
                         skillCategories.map((category) => (
                           <div key={category.type} className="flex justify-between items-center">
                             <span className="text-gray-600">{category.type}:</span>
-                            <span className="font-medium text-gray-900 text-xs">{category.competence}</span>
+                            <span className="font-medium text-gray-900">{category.competence}</span>
                           </div>
                         ))
                       )}
                     </div>
                   </div>
                   
-                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-                    <h4 className="font-semibold text-black mb-3 flex items-center gap-2">
-                      <span className="text-sm">⏱️</span>
-                      Project Scope
+                  <div className="p-2 bg-amber-50 rounded-lg border border-amber-200">
+                    <h4 className="font-semibold text-black mb-1 flex items-center gap-2 text-xs">
+                      <span>⏱️</span>
+                    <span className="text-sm font-bold text-black">Project Scope</span>
                     </h4>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-1 text-xs">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Timeline:</span>
                         <span className="font-medium text-gray-900">{timeline} months</span>
@@ -712,8 +715,9 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
                 {/* Only Continue to Analysis button at the bottom left */}
                 <div className="flex justify-center mt-8">
                   <Button 
-                    className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold py-3 shadow-lg transition-all duration-300" 
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold py-2 shadow-lg transition-all duration-300 text-xs" 
                     onClick={onNext} 
+                    disabled={isLoading || loadingSkills}
                   >
                     Continue to Analysis
                     <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />

@@ -317,7 +317,7 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
 
   // Removed manual AI generation function
 
-  if (isGenerating || loading) {
+   if (isGenerating || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="max-w-7xl w-full">
@@ -383,6 +383,7 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
     );
   }
 
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Error from LLM generation */}
@@ -390,13 +391,15 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
         <div className="mb-4 text-red-600 text-center font-medium">{aiError}</div>
       )}
       {/* Header */}
-      <div className="flex items-center justify-center mb-8">
-      </div>
+      <div className="flex items-center justify-center mb-8"></div>
       {/* Move heading to the very top, remove subtitle, and keep requirements source indicator */}
-      <div className="text-center font-sans mt-4 mb-6">
+      <div className="text-center font-sans mt-4 mb-10">
         <h2 className="text-2xl font-bold mb-2 text-black">
           Role Requirements for {roleData?.ROLE_NAME || localStorage.getItem('selectedRoleName') || 'Selected Role'}
         </h2>
+        <p className="text-sm text-gray-600 max-w-xl mx-auto leading-normal mb-2">
+          Review and edit the AI-generated requirements for your selected role. You can update responsibilities, eligibility, tools, technologies, and compliance requirements as needed before continuing.
+        </p>
         {/* Requirements Source Indicator */}
         {requirementsSource && (
           <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium mt-2 ${
@@ -419,12 +422,12 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
         )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-8 mb-8 mt-8">
+      <div className="grid lg:grid-cols-2 gap-8 mb-8 mt-16">
         {/* Left Column - Responsibilities & Eligibility (Bigger Boxes) */}
         <div className="space-y-8 mt-0">
           {/* Responsibilities */}
           <Card className="p-6 bg-white border border-gray-200 text-base">
-            <h3 className="text-lg font-bold text-black mb-4 flex items-center">
+            <h3 className="text-base font-bold text-black mb-4 flex items-center">
               <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mr-3">
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
@@ -439,7 +442,7 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
               }}
               placeholder="Enter responsibilities (one per line)..."
               rows={12}
-              className="mb-6 text-base leading-relaxed"
+              className="mb-6 text-sm leading-relaxed"
             />
             
             {/* Removed Save Responsibilities button */}
@@ -447,7 +450,7 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
 
           {/* Eligibility Criteria */}
           <Card className="p-6 bg-white border border-gray-200 text-base">
-            <h3 className="text-lg font-bold text-black mb-4 flex items-center">
+            <h3 className="text-base font-bold text-black mb-4 flex items-center">
               <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mr-3">
                 <UserCheck className="w-5 h-5 text-white" />
               </div>
@@ -462,7 +465,7 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
               }}
               placeholder="Enter eligibility criteria (one per line)..."
               rows={12}
-              className="mb-6 text-base leading-relaxed"
+              className="mb-6 text-sm leading-relaxed"
             />
             
             {/* Removed Save Eligibility button */}
@@ -473,7 +476,7 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
         <div className="space-y-8 mt-0">
           {/* Tools & Technologies */}
           <Card className="p-6 bg-white border border-gray-200 text-base">
-            <h3 className="text-lg font-bold text-black mb-4 flex items-center">
+            <h3 className="text-base font-bold text-black mb-4 flex items-center">
               <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
                 <Wrench className="w-5 h-5 text-white" />
               </div>
@@ -482,7 +485,7 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
             
             <div className="space-y-3 mb-4">
               {roleData?.TOOLS?.map((tool, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-xs">
                   {editingTool?.index === index && editingTool?.type === 'Tool' ? (
                     // Edit mode for tools
                     <div className="flex items-center space-x-2 flex-1">
@@ -553,7 +556,7 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
               ))}
               
               {roleData?.TECHNOLOGIES?.map((tech, index) => (
-                <div key={`tech-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={`tech-${index}`} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-xs">
                   {editingTool?.index === index && editingTool?.type === 'Technology' ? (
                     // Edit mode for technologies
                     <div className="flex items-center space-x-2 flex-1">
@@ -672,7 +675,7 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
             
             <div className="space-y-3 mb-4">
               {roleData?.COMPLIANCES?.map((comp, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-xs">
                   {editingCompliance === index ? (
                     // Edit mode for compliance
                     <div className="flex items-center space-x-2 flex-1">
@@ -775,16 +778,7 @@ const GeneratedRequirements = ({ onNext, onBack, selectedRoleId, selectedRoleNam
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-between items-center pt-8 border-t border-gray-200">
-        <button 
-          onClick={onBack}
-          className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors px-4 py-2 rounded-lg hover:bg-gray-100"
-        >
-          <svg className="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Benchmarking
-        </button>
+      <div className="flex justify-end items-center pt-8 border-t border-gray-200">
         <div className="flex space-x-4">
           <Button 
             onClick={saveAllRequirements}

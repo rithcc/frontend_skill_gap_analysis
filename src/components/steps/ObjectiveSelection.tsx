@@ -41,7 +41,7 @@ const ObjectiveSelection = ({
       bgColor: "bg-gradient-to-br from-blue-50 to-cyan-50",
       features: [
         { icon: "🎯", title: "Project Fit Recommendations" },
-        { icon: "📚", title: "Learning Path Creation" },
+        { icon: "📚", title: "Learning Path Creation", active: true },
         { icon: "👥", title: "Mentor Matching" },
         { icon: "📋", title: "Curriculum Design" },
         { icon: "🚀", title: "Upskill for New Role", active: true },
@@ -55,7 +55,7 @@ const ObjectiveSelection = ({
       color: "from-purple-500 to-pink-500",
       bgColor: "bg-gradient-to-br from-purple-50 to-pink-50",
       features: [
-        { icon: "🌟", title: "Career Path Planning" },
+        { icon: "🌟", title: "Career Path Planning", active: true },
         { icon: "💎", title: "High Potential Development" },
       ],
     },
@@ -80,7 +80,22 @@ const ObjectiveSelection = ({
   const handleUpskillClick = () => {
     // Select the team-productivity objective to enable continue button
     onSelectObjective("team-productivity");
-    
+    if (!isAuthenticated) {
+      setShowAuth(true);
+    } else {
+      setShowAnalysis(true);
+    }
+
+  };
+
+  // Handler for Career Path Planning and Learning Path Creation
+  const handleActiveFeatureClick = (featureTitle: string) => {
+    // Map feature to objective
+    if (featureTitle === "Career Path Planning") {
+      onSelectObjective("innovation");
+    } else if (featureTitle === "Learning Path Creation") {
+      onSelectObjective("team-productivity");
+    }
     if (!isAuthenticated) {
       setShowAuth(true);
     } else {
@@ -132,7 +147,9 @@ const ObjectiveSelection = ({
                           ? "bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 cursor-pointer hover:shadow-md"
                           : "bg-gray-50 cursor-default"
                       }`}
-                      onClick={feature.active ? handleUpskillClick : undefined}
+                      onClick={feature.active && feature.title === "Upskill for New Role"
+                        ? handleUpskillClick
+                        : undefined}
                     >
                       <div className="flex items-center space-x-2">
                         <span className="text-base">{feature.icon}</span>

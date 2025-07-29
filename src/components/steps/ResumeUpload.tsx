@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload, FileText, Plus, Trash2, Brain, Zap, BarChart3, ChevronRight, Eye, CheckCircle } from "lucide-react";
@@ -16,12 +16,68 @@ interface ProcessedFile {
   originalApiResponse?: Record<string, unknown>; // Store the original API response
 }
 
+
+
+
+// Define a lightweight file metadata type for persistence
+type FileMeta = { name: string; size: number; type: string };
+
 const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [processedFiles, setProcessedFiles] = useState<ProcessedFile[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<FileMeta[]>([]);
+  const [processedFiles, setProcessedFiles] = useState<(Omit<ProcessedFile, 'file'> & { file: FileMeta })[]>([]);
   const [selectedResumeIndex, setSelectedResumeIndex] = useState<number | null>(null);
   const [combinedResumeText, setCombinedResumeText] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Restore uploadedFiles and processedFiles from localStorage on mount
+  useEffect(() => {
+    // Restore uploadedFiles
+    const uploadedMeta = localStorage.getItem('resumeUploadFilesMeta');
+    let restoredFiles: FileMeta[] = [];
+    if (uploadedMeta) {
+      try {
+        const metaArr: FileMeta[] = JSON.parse(uploadedMeta);
+        if (Array.isArray(metaArr)) {
+          restoredFiles = metaArr.map((meta) => ({
+            name: meta.name,
+            size: meta.size,
+            type: meta.type || '',
+          }));
+        }
+      } catch (e) {
+        console.error('Failed to parse resumeUploadFilesMeta from localStorage', e);
+      }
+    }
+    setUploadedFiles(restoredFiles);
+
+    // Restore processedFiles
+    const processedRaw = localStorage.getItem('resumeProcessedFiles');
+    if (processedRaw) {
+      try {
+        type StoredProcessedFile = {
+          file: FileMeta;
+          extractedText: string | null;
+          isProcessing: boolean;
+          originalApiResponse?: Record<string, unknown>;
+        };
+        const arr: StoredProcessedFile[] = JSON.parse(processedRaw);
+        if (Array.isArray(arr)) {
+          setProcessedFiles(arr.map((pf) => ({
+            file: {
+              name: pf.file?.name,
+              size: pf.file?.size,
+              type: pf.file?.type || '',
+            },
+            extractedText: pf.extractedText,
+            isProcessing: false,
+            originalApiResponse: pf.originalApiResponse,
+          })));
+        }
+      } catch (e) {
+        console.error('Failed to parse resumeProcessedFiles from localStorage', e);
+      }
+    }
+  }, []);
 
   const sendResumeToServer = async (file: File, fileName: string) => {
     try {
@@ -182,7 +238,18 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
       isProcessing: true
     }));
     
-    setProcessedFiles(prev => [...prev, ...newProcessedFiles]);
+    setProcessedFiles(prev => {
+      const updated = [...prev, ...newProcessedFiles.map(pf => ({
+        ...pf,
+        file: {
+          name: pf.file.name,
+          size: pf.file.size,
+          type: pf.file.type || '',
+        },
+      }))];
+      localStorage.setItem('resumeProcessedFiles', JSON.stringify(updated));
+      return updated;
+    });
     
     const texts: string[] = [];
     const updatedProcessedFiles: ProcessedFile[] = [...newProcessedFiles];
@@ -208,11 +275,12 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
       
       // Update the state
       setProcessedFiles(prev => {
-        const updated = prev.map(pf => 
-          pf.file === file 
+        const updated = prev.map(pf =>
+          pf.file.name === file.name
             ? { ...pf, extractedText, isProcessing: false, originalApiResponse: originalResponse }
             : pf
         );
+        localStorage.setItem('resumeProcessedFiles', JSON.stringify(updated));
         console.log(`Updated processed files after ${file.name}:`, updated);
         console.log(`Files with extracted text:`, updated.filter(pf => pf.extractedText).length);
         return updated;
@@ -229,6 +297,11 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
     // Combine all extracted texts
     const combined = texts.join('\n\n--- NEXT RESUME ---\n\n');
     setCombinedResumeText(combined);
+    // Save uploadedFiles meta to localStorage
+    localStorage.setItem('resumeUploadFilesMeta', JSON.stringify([
+      ...uploadedFiles,
+      ...files.map(f => ({ name: f.name, size: f.size, type: f.type || '' }))
+    ]));
     
     // Store comprehensive data in localStorage for other pages to access
     localStorage.setItem('combinedResumeText', combined);
@@ -291,8 +364,14 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    setUploadedFiles(prev => [...prev, ...files]);
-    
+    setUploadedFiles(prev => {
+      const updated = [
+        ...prev,
+        ...files.map(f => ({ name: f.name, size: f.size, type: f.type || '' }))
+      ];
+      localStorage.setItem('resumeUploadFilesMeta', JSON.stringify(updated));
+      return updated;
+    });
     // Process the new files for text extraction
     if (files.length > 0) {
       processAllResumes(files);
@@ -301,9 +380,16 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
 
   const removeFile = (index: number) => {
     const fileToRemove = uploadedFiles[index];
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
-    setProcessedFiles(prev => prev.filter(pf => pf.file !== fileToRemove));
-    
+    setUploadedFiles(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      localStorage.setItem('resumeUploadFilesMeta', JSON.stringify(updated));
+      return updated;
+    });
+    setProcessedFiles(prev => {
+      const updated = prev.filter(pf => pf.file.name !== fileToRemove.name);
+      localStorage.setItem('resumeProcessedFiles', JSON.stringify(updated));
+      return updated;
+    });
     // Reset selected resume if it was the removed one
     if (selectedResumeIndex === index) {
       setSelectedResumeIndex(null);
@@ -318,7 +404,8 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
 
   const getSelectedResumeText = () => {
     if (selectedResumeIndex === null) return null;
-    const processedFile = processedFiles.find(pf => pf.file === uploadedFiles[selectedResumeIndex]);
+    const fileMeta = uploadedFiles[selectedResumeIndex];
+    const processedFile = processedFiles.find(pf => pf.file.name === fileMeta.name);
     return processedFile?.extractedText || null;
   };
 
@@ -326,24 +413,24 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
     const extractedTexts = processedFiles
       .filter(pf => pf.extractedText)
       .map(pf => pf.extractedText);
-    
+
     console.log("Analyzing team intelligence with uploaded files:", uploadedFiles);
     console.log("Processed files:", processedFiles);
     console.log("Extracted texts:", extractedTexts);
     console.log("Combined resume text:", combinedResumeText);
     console.log("Button should be enabled:", processedFiles.filter(pf => pf.extractedText).length > 0);
-    
+
     // Ensure latest data is saved to localStorage before proceeding
     const latestCombined = extractedTexts.join('\n\n--- NEXT RESUME ---\n\n');
     localStorage.setItem('combinedResumeText', latestCombined);
     localStorage.setItem('individualResumeTexts', JSON.stringify(extractedTexts));
-    
+
     // Save processing status for next page
     localStorage.setItem('resumeProcessingComplete', 'true');
     localStorage.setItem('resumeProcessingTimestamp', new Date().toISOString());
-    
+
     console.log('[handleAnalyze] Final data saved to localStorage, proceeding to next step');
-    
+
     // Scroll to top before navigating
     window.scrollTo({ top: 0, behavior: 'smooth' });
     // Call onNext to proceed to the next step (EmployeeSkillCards)
@@ -431,7 +518,7 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
             <>
               <div className="space-y-3 max-h-72 overflow-y-auto">
                 {uploadedFiles.map((file, index) => {
-                  const processedFile = processedFiles.find(pf => pf.file === file);
+                  const processedFile = processedFiles.find(pf => pf.file.name === file.name);
                   const isSelected = selectedResumeIndex === index;
                   const isProcessing = processedFile?.isProcessing || false;
                   const hasText = processedFile?.extractedText;
@@ -491,16 +578,28 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
                   );
                 })}
               </div>
-              {/* Launch AI Analysis button at the end of the box */}
-          {uploadedFiles.length > 0 && (
-            <div className="flex justify-center mt-8">
-              <Button 
+              {/* See Employee Card and Launch AI Analysis buttons */}
+          {uploadedFiles.length > 0 && processedFiles.filter(pf => pf.extractedText).length > 0 && (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+              <Button
+                className="bg-modern-blue hover:bg-modern-blue/90 text-white px-8 py-3 rounded-xl font-semibold"
+                disabled={selectedResumeIndex === null}
+                onClick={() => {
+                  if (selectedResumeIndex !== null) {
+                    // Store selected resume index for EmployeeSkillCards
+                    localStorage.setItem('selectedResumeIndex', selectedResumeIndex.toString());
+                    // Set flag to show EmployeeSkillCards
+                    localStorage.setItem('showEmployeeSkillCard', 'true');
+                    if (onNext) onNext();
+                  }
+                }}
+              >
+                See Employee Card
+              </Button>
+              <Button
                 onClick={handleAnalyze}
                 className="bg-modern-blue hover:bg-modern-blue/90 text-white px-12 py-3 rounded-xl font-semibold disabled:opacity-50"
-                disabled={(() => {
-                  const count = processedFiles.filter(pf => pf.extractedText).length;
-                  return count === 0;
-                })()}
+                disabled={processedFiles.filter(pf => pf.extractedText).length === 0}
               >
                 <div className="flex items-center">
                   <Zap className="w-5 h-5 mr-2" />

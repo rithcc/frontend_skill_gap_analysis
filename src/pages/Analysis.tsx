@@ -19,32 +19,42 @@ import SGAAnalysis from "@/components/steps/SGA Analysis";
 
 const Analysis = () => {
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedObjective, setSelectedObjective] = useState<string | null>(null);
+  const [selectedObjective, setSelectedObjective] = useState<string | null>(
+    null
+  );
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [selectedRoleName, setSelectedRoleName] = useState<string | null>(null);
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
-  const [requirementChoice, setRequirementChoice] = useState<"have" | "define" | null>(null);
+  const [requirementChoice, setRequirementChoice] = useState<
+    "have" | "define" | null
+  >(null);
 
   const handleNext = () => {
     if (currentStep < 13) {
       setCurrentStep(currentStep + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const handleBack = () => {
+    // Special case: if on AnalysisProgress (step 8), always go to ResumeUpload (step 6)
+    if (currentStep === 8) {
+      setCurrentStep(6);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       // If on first step, go back to dashboard
       navigate("/dashboard");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -62,10 +72,10 @@ const Analysis = () => {
     setSelectedRoleName(roleName);
 
     // Store in localStorage for downstream steps
-    localStorage.setItem('selectedRoleId', roleId);
-    localStorage.setItem('selectedRoleName', roleName);
-    localStorage.setItem('requirementsSource', 'defined');
-    
+    localStorage.setItem("selectedRoleId", roleId);
+    localStorage.setItem("selectedRoleName", roleName);
+    localStorage.setItem("requirementsSource", "defined");
+
     // Auto-advance if requirement choice is already made
     if (requirementChoice) {
       setTimeout(() => {
@@ -94,9 +104,11 @@ const Analysis = () => {
 
   const handleUploadComplete = () => {
     // Set requirements source to uploaded_document when upload completes
-    localStorage.setItem('requirementsSource', 'uploaded_document');
-    console.log('Document upload completed, set requirementsSource to uploaded_document');
-    
+    localStorage.setItem("requirementsSource", "uploaded_document");
+    console.log(
+      "Document upload completed, set requirementsSource to uploaded_document"
+    );
+
     // Auto-advance to next step when upload is complete
     setTimeout(() => {
       handleNext();
@@ -105,7 +117,7 @@ const Analysis = () => {
 
   const handleGenerateReport = () => {
     setCurrentStep(12);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const renderStep = () => {
@@ -129,7 +141,12 @@ const Analysis = () => {
         );
       case 3:
         if (requirementChoice === "have") {
-          return <UploadRequirement onUploadComplete={handleUploadComplete} onBack={handleBack} />;
+          return (
+            <UploadRequirement
+              onUploadComplete={handleUploadComplete}
+              onBack={handleBack}
+            />
+          );
         } else {
           return (
             <BenchmarkingScenario
@@ -153,11 +170,45 @@ const Analysis = () => {
           />
         );
       case 6:
-        return <ResumeUpload onNext={handleNext} onBack={handleBack} />;
+        return (
+          <ResumeUpload
+            onNext={() => {
+              if (localStorage.getItem("showEmployeeSkillCard") === "true") {
+                localStorage.removeItem("showEmployeeSkillCard");
+                setCurrentStep(7); // go to EmployeeSkillCards
+              } else {
+                setCurrentStep(8); // skip to AnalysisProgress
+              }
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onBack={handleBack}
+          />
+        );
+
       case 7:
-        return <EmployeeSkillCards onNext={handleNext} onBack={handleBack} />;
+        return (
+          <EmployeeSkillCards
+            onNext={handleNext}
+            onBack={() => {
+              // Go back to ResumeUpload
+              setCurrentStep(6);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        );
+
       case 8:
-        return <AnalysisProgress onNext={handleNext} onBack={handleBack} />;
+        return (
+          <AnalysisProgress
+            onNext={handleNext}
+            onBack={() => {
+              alert("Going back will reset the analysis progress. Are you sure you want to go back?");
+              setCurrentStep(6);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        );
+
       case 9:
         return <SGAAnalysis onNext={handleNext} onBack={handleBack} />;
       case 10:

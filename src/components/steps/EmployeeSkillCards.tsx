@@ -396,31 +396,34 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
 
   return (
     <div className="min-h-screen bg-white p-4 font-sans text-base">
-      {/* Centered Title */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+      {/* Centered Title and Description */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
           Employee Skills Analysis
         </h1>
+        <p className="text-sm text-gray-600 text-center mt-2 max-w-2xl mx-auto">
+          This page provides a comprehensive overview of the employee's skills, technologies, tools, certifications, and career timeline based on the uploaded resume. Review the details below and proceed to conduct a skill gap analysis.
+        </p>
       </div>
 
       <div className="max-w-7xl mx-auto">
         {/* Personal Information */}
 
-        {resumeData.personal_info && (
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 p-6 mb-8 flex justify-center">
-            <div className="w-full max-w-xl flex flex-col items-center">
+       {resumeData.personal_info && (
+          <div className="relative bg-gradient-to-br from-blue-500/10 via-blue-400/10 to-blue-300/10 backdrop-blur-xl rounded-3xl shadow-xl border border-blue-200 p-6 mb-8 flex justify-center overflow-hidden">
+            {/* Blue Background Pattern */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-blue-400/10 to-blue-300/10 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-blue-300/10 rounded-full -translate-y-8 translate-x-8 pointer-events-none"></div>
+            <div className="relative w-full max-w-xl flex flex-col items-center z-10">
               <div className="flex flex-col items-center mb-4">
-                <h2 className="text-lg font-bold text-gray-900 mb-0.5 text-center flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full">
-                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </span>
-                  <span>{resumeData.personal_info.name}</span>
+                <h2 className="text-xl font-extrabold text-gray-900 mb-1 text-center uppercase tracking-wide">
+                  {resumeData.personal_info.name}
                 </h2>
-                <p className="text-sm text-gray-600 font-medium text-center">{resumeData.personal_info.title}</p>
+                <p className="text-base text-blue-700 font-semibold text-center mb-1">
+                  {resumeData.personal_info.title}
+                </p>
                 {resumeData.experience_overview && (
-                  <p className="text-xs text-gray-500 mt-0.5 text-center">
+                  <p className="text-sm text-gray-500 mt-0.5 text-center">
                     {resumeData.experience_overview.total_experience_years} years experience • Full-time Professional
                   </p>
                 )}
@@ -432,7 +435,7 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <span className="text-gray-700">{resumeData.personal_info.email}</span>
+                  <span className="text-sm text-gray-700">{resumeData.personal_info.email}</span>
                 </div>
                 <div className="flex items-center space-x-2 justify-center">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -440,69 +443,36 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                   </div>
-                  <span className="text-gray-700">{maskPhoneNumber(resumeData.personal_info.phone)}</span>
+                  <span className="text-sm text-gray-700">{maskPhoneNumber(resumeData.personal_info.phone)}</span>
                 </div>
               </div>
             </div>
           </div>
         )}
-
-
+        
         {/* Professional Summary (moved up) */}
         {resumeData.professional_summary && (
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 p-6 mb-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-rose-500 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 p-4 mb-4">
+            <h3 className="text-base font-bold text-black mb-2 flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-rose-500 rounded-xl flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
               Professional Summary
             </h3>
-            <div className="space-y-4">
-              {resumeData.professional_summary["PDLC Phases"] && (
-                <div>
-                  <h4 className="font-semibold text-gray-700 mb-3">PDLC Phases</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {resumeData.professional_summary["PDLC Phases"].map((phase, index) => (
-                      <span key={index} className="px-3 py-1.5 bg-gradient-to-r from-pink-100 to-rose-100 text-pink-800 rounded-xl text-sm font-medium border border-pink-200">
-                        {phase}
-                      </span>
-                    ))}
-                  </div>
+            {/* Only show Key Strengths content, no title, no outer box, no diploma list */}
+            {resumeData.professional_summary["Key Strengths"] && (
+              Array.isArray(resumeData.professional_summary["Key Strengths"]) ? (
+                <div className="mt-2">
+                  {resumeData.professional_summary["Key Strengths"].map((strength, idx) => (
+                    <p key={idx} className="text-sm text-gray-700 mb-2 last:mb-0">{strength}</p>
+                  ))}
                 </div>
-              )}
-              {resumeData.professional_summary["Key Strengths"] && (
-                <div>
-                  <h4 className="font-semibold text-gray-700 mb-3">Key Strengths</h4>
-                  <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-xl p-4 border border-pink-200">
-                    {Array.isArray(resumeData.professional_summary["Key Strengths"]) ? (
-                      resumeData.professional_summary["Key Strengths"].map((strength, index) => (
-                        <p key={index} className="text-gray-700 text-sm leading-relaxed mb-2 last:mb-0">
-                          • {strength}
-                        </p>
-                      ))
-                    ) : (
-                      <p className="text-gray-700 text-sm leading-relaxed">
-                        {resumeData.professional_summary["Key Strengths"]}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-              {resumeData.professional_summary["Recent Learning"] && (
-                <div>
-                  <h4 className="font-semibold text-gray-700 mb-3">Recent Learning</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {resumeData.professional_summary["Recent Learning"].map((learning, index) => (
-                      <span key={index} className="px-3 py-1.5 bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 rounded-xl text-sm font-medium border border-yellow-200">
-                        {learning}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+              ) : (
+                <p className="text-sm text-gray-700 mt-2">{resumeData.professional_summary["Key Strengths"]}</p>
+              )
+            )}
           </div>
         )}
 
@@ -528,7 +498,7 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
                       <div className="flex flex-wrap gap-2">
                         {resumeData.industries.map((industry, index) => (
                           <span key={index} className="px-3 py-1.5 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 rounded-xl text-sm font-medium border border-blue-200">
-                            {industry}
+                            <span className="text-sm">{industry}</span>
                           </span>
                         ))}
                       </div>
@@ -540,7 +510,7 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
                       <div className="flex flex-wrap gap-2">
                         {resumeData.domains.map((domain, index) => (
                           <span key={index} className="px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-xl text-sm font-medium border border-green-200">
-                            {domain}
+                            <span className="text-sm">{domain}</span>
                           </span>
                         ))}
                       </div>
@@ -552,7 +522,7 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
                       <div className="flex flex-wrap gap-2">
                         {resumeData.use_cases.map((useCase, index) => (
                           <span key={index} className="px-3 py-1.5 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 rounded-xl text-sm font-medium border border-purple-200">
-                            {useCase}
+                            <span className="text-sm">{useCase}</span>
                           </span>
                         ))}
                       </div>
@@ -564,47 +534,35 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
 
             {/* Technologies & Tools Combined */}
             {((Array.isArray(resumeData.technologies) && resumeData.technologies.length > 0) || (Array.isArray(resumeData.tools) && resumeData.tools.length > 0)) && (
-              <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3">
+              <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 p-4">
+                <h3 className="text-base font-bold text-black mb-2 flex items-center gap-2">
                   <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-teal-500 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v-2m6 2v-2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                     </svg>
                   </div>
                   Technologies & Tools
                 </h3>
-                {Array.isArray(resumeData.technologies) && resumeData.technologies.length > 0 && (
-                  <>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Technologies</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                      {resumeData.technologies.map((tech, index) => (
-                        <div key={index} className="px-3 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 rounded-xl text-center font-medium border border-indigo-200 hover:shadow-md transition-shadow">
-                          {tech}
-                        </div>
-                      ))}
+                <div className="grid grid-cols-2 gap-2">
+                  {Array.isArray(resumeData.technologies) && resumeData.technologies.length > 0 && resumeData.technologies.map((tech, index) => (
+                    <div key={index} className="px-2 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 text-sm text-indigo-700 rounded-xl text-center font-medium border border-indigo-200">
+                      <span className="text-sm">{tech}</span>
                     </div>
-                  </>
-                )}
-                {Array.isArray(resumeData.tools) && resumeData.tools.length > 0 && (
-                  <>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Tools & Platforms</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {resumeData.tools.map((tool, index) => (
-                        <div key={index} className="px-3 py-2 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 rounded-xl text-center font-medium border border-emerald-200 hover:shadow-md transition-shadow">
-                          {tool}
-                        </div>
-                      ))}
+                  ))}
+                  {Array.isArray(resumeData.tools) && resumeData.tools.length > 0 && resumeData.tools.map((tool, index) => (
+                    <div key={index} className="px-2 py-1 bg-gradient-to-r from-emerald-50 to-teal-50 text-sm text-emerald-700 rounded-xl text-center font-medium border border-emerald-200">
+                      <span className="text-sm">{tool}</span>
                     </div>
-                  </>
-                )}
+                  ))}
+                </div>
               </div>
             )}
             {/* Certifications (separate box, yellow/orange color) */}
             {resumeData.qualifications && (resumeData.qualifications.certifications?.length ?? 0) > 0 && (
-              <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-yellow-200 p-6">
-                <h3 className="text-lg font-bold text-yellow-700 mb-4 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-300 p-4">
+                <h3 className="text-base font-bold text-black mb-3 flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                     </svg>
@@ -613,8 +571,8 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {resumeData.qualifications.certifications?.map((cert, index) => (
-                    <span key={index} className="px-3 py-1.5 bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 rounded-xl text-sm font-medium border border-yellow-300">
-                      {cert}
+                    <span key={index} className="px-3 py-1 bg-gradient-to-r from-yellow-100 to-orange-100 text-black rounded-xl text-sm font-medium border border-yellow-300">
+                      <span className="text-sm">{cert}</span>
                     </span>
                   ))}
                 </div>
@@ -650,7 +608,7 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
             {/* Education */}
             {resumeData.qualifications && (resumeData.qualifications.education?.length ?? 0) > 0 && (
               <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <h3 className="text-base font-bold text-black mb-4 flex items-center gap-3">
                   <div className="w-10 h-10 bg-gradient-to-r from-violet-500 to-purple-500 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
@@ -661,8 +619,8 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
                 </h3>
                 <div className="space-y-2">
                   {resumeData.qualifications.education?.map((edu, index) => (
-                    <div key={index} className="p-3 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-200">
-                      <p className="text-gray-700 font-medium">{edu}</p>
+                    <div key={index} className="p-2 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-200">
+                      <p className="text-sm text-gray-700 font-medium">{edu}</p>
                     </div>
                   ))}
                 </div>
@@ -674,7 +632,7 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
             {/* Work History */}
             {resumeData.work_history && (
               <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <h3 className="text-base font-bold text-black mb-4 flex items-center gap-3">
                   <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6a2 2 0 012-2h4a2 2 0 012 2z" />
@@ -689,13 +647,13 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
                       {index < resumeData.work_history!.length - 1 && (
                         <div className="absolute left-1.5 top-5 w-0.5 h-full bg-gradient-to-b from-teal-200 to-transparent"></div>
                       )}
-                      <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-4 border border-teal-200">
+                      <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-2 border border-teal-200">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <h4 className="font-bold text-gray-900">{job.role}</h4>
-                            <p className="text-teal-700 font-medium">{job.company}</p>
+                            <h4 className="font-bold text-sm text-gray-900">{job.role}</h4>
+                            <p className="text-sm text-teal-700 font-medium">{job.company}</p>
                           </div>
-                          <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-lg font-medium">
+                          <span className="text-sm text-gray-500 bg-white px-2 py-1 rounded-lg font-medium">
                             {job.start_year}-{job.end_year}
                           </span>
                         </div>
@@ -709,16 +667,6 @@ export default function EmployeeSkillCards({ onNext, onBack }: EmployeeSkillCard
             {/* Qualifications box removed; now inside Tools & Platforms */}
           </div>
         </div>
-      </div>
-      {/* Conduct Skill Gap Analysis button at the very end, centered */}
-      <div className="flex justify-center mt-12 mb-8">
-        <button
-          onClick={onNext || (() => window.location.href = '/index.html?screen=AnalysisProgress')}
-          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 text-center font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-base"
-          style={{ minWidth: 180 }}
-        >
-          🚀 Conduct Skill Gap Analysis
-        </button>
       </div>
     </div>
   );

@@ -219,7 +219,7 @@ export default function IndividualSkillGapAnalysis({ onNext, onBack }: Individua
     <div className="min-h-screen bg-white text-[15px] md:text-[16px]">
       {/* Modern Header with Glassmorphism */}
       <div className="pt-6 pb-2">
-        <h1 className="text-xl font-bold text-gray-900 text-center">Individual Skill Gap Analysis</h1>
+        <h1 className="text-2xl font-bold text-gray-900 text-center">Individual Skill Gap Analysis</h1>
       </div>
 
       <div className="max-w-7xl mx-auto p-4">
@@ -268,14 +268,7 @@ export default function IndividualSkillGapAnalysis({ onNext, onBack }: Individua
                 </div>
               </div>
             </div>
-            <button 
-              onClick={onBack || (() => window.history.back())}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            {/* X button removed */}
           </div>
         </div>
 

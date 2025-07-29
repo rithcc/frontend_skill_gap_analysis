@@ -13,26 +13,15 @@ export default function Recommendations({ onNext, onBack }: RecommendationsProps
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-6">
-        {/* Hero Section */}
-        <div className="text-center mb-6 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl -z-10"></div>
-          <div className="bg-white/80 rounded-3xl shadow-2xl border border-white/20 p-6 relative overflow-hidden w-full">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full -translate-y-8 translate-x-8"></div>
-            <div className="relative">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900" style={{letterSpacing: '-0.02em', lineHeight: '1.1'}}>
-                AI-Powered Learning Recommendations
-              </h2>
-              <p className="text-xs text-gray-600 max-w-sm mx-auto leading-tight truncate whitespace-normal" style={{display: 'block', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                Personalized strategies and curated learning paths for Sarah Johnson to become a Senior ADAS Computer Vision Engineer.
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Title and Description only, no icon or box */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+          AI-Powered Learning Recommendations
+        </h1>
+        <p className="text-sm text-gray-600 text-center mt-2 max-w-2xl mx-auto">
+          Personalized strategies and curated learning paths for Sarah Johnson to become a Senior ADAS Computer Vision Engineer.
+        </p>
+      </div>
 
         {/* Enhanced Priority Recommendations */}
         <div className="mb-8">
