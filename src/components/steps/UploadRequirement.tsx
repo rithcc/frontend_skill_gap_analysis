@@ -87,7 +87,16 @@ export default function UploadRequirements({
         const result = await response.json();
         console.log("Extracted data:", result);
 
-        localStorage.setItem("selectedRole", JSON.stringify(result));
+        // Ensure the structure matches the API contract
+        const uploadData = {
+          id: result.id,
+          originalName: result.originalName,
+          fileSize: result.fileSize,
+          status: result.status,
+          createdAt: result.createdAt,
+          requirements: result.requirements
+        };
+        localStorage.setItem("selectedRole", JSON.stringify(uploadData));
         localStorage.setItem("requirementsSource", "uploaded_document");
 
         // ✅ Ensure callback exists and is called safely

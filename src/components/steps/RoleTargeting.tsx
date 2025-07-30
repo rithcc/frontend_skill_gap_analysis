@@ -14,12 +14,8 @@ import {
   ArrowLeft
 } from "lucide-react";
 
-// Interface for the API response
-interface Technology {
-  id: string;
-  name: string;
-}
 
+// Interface for the API response
 interface Role {
   id: string;
   title: string;
@@ -29,7 +25,7 @@ interface Role {
   location: string;
   experience: string;
   tags: string[];
-  technologies: Technology[];
+  technologies: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -53,7 +49,7 @@ const RoleTargeting = ({ selectedRole, onSelectRole, onRequirementChoice, onBack
   const [error, setError] = useState<string | null>(null);
   const [selectedCard, setSelectedCard] = useState<string | null>(selectedRole);
 
-  useEffect(() => {
+useEffect(() => {
     const delayDebounce = setTimeout(() => {
       const fetchRoles = async () => {
         if (initialLoad) setLoading(true);

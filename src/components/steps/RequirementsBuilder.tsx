@@ -158,9 +158,7 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
   style={{
     background: `linear-gradient(to right, ${hexColor} 0%, ${hexColor} ${((level - 1) / 4) * 100}%, #e5e7eb ${((level - 1) / 4) * 100}%, #e5e7eb 100%)`
   }}
-/>
-
-        
+/>  
         </div>
         <div className="mt-2 text-xs text-gray-600">
           <span className="font-medium">Includes:</span> {includedSkills}
@@ -169,7 +167,7 @@ export default function RequirementsBuilder({ onNext, onBack, selectedRoleId, se
     );
   };
 
-  // 🧠 API Integration
+ // 🧠 API Integration
   const classifySkills = async (skills: string[], roleContext: string) => {
     setLoadingSkills(true);
     try {

@@ -23,7 +23,7 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
       const fd = new FormData();
       fd.append('file', file);
 
-      const res = await fetch('http://localhost:8001/api/extract-resume', {
+      const res = await fetch('http://localhost:8001/extract-resume', {
         method: 'POST',
         body: fd,
       });

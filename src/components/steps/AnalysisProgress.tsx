@@ -30,6 +30,7 @@ export default function AnalysisProgress({ onNext, onBack }: AnalysisProgressPro
   }, []);
 
   // Simulate analysis progress for demo purposes
+   // Simulate analysis progress for demo purposes
   useEffect(() => {
     // API endpoints for each step
       const apiBase = 'http://localhost:8001';
@@ -44,7 +45,6 @@ export default function AnalysisProgress({ onNext, onBack }: AnalysisProgressPro
         { step: 8, url: `${apiBase}/conduct-skill-gap-analysis`, message: 'Conducting skill gap analysis...' },
         { step: 9, url: `${apiBase}/get-skill-gap-score`, message: 'Generating final skill gap scores...' }
       ];
-
     let cancelled = false;
 
     const runAnalysis = async () => {
@@ -55,7 +55,7 @@ export default function AnalysisProgress({ onNext, onBack }: AnalysisProgressPro
         setSteps(prev => prev.map(s => s.id === step ? { ...s, active: true } : { ...s, active: false }));
         setProgress((step / 9) * 100);
         try {
-          await fetch(url, { method: 'POST' });
+await fetch(url, { method: 'POST' });
         } catch (err) {
           // Optionally handle error (show error message, etc.)
         }

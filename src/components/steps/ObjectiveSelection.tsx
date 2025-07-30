@@ -20,12 +20,16 @@ interface ObjectiveSelectionProps {
   selectedObjective: string | null;
   onSelectObjective: (objective: string) => void;
   onBack?: () => void;
+  onNext?: () => void;
+  onCareerPathNext?: () => void;
 }
 
 const ObjectiveSelection = ({
   selectedObjective,
   onSelectObjective,
   onBack,
+  onNext,
+  onCareerPathNext,
 }: ObjectiveSelectionProps) => {
   const [showAuth, setShowAuth] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -93,8 +97,19 @@ const ObjectiveSelection = ({
     // Map feature to objective
     if (featureTitle === "Career Path Planning") {
       onSelectObjective("innovation");
+      if (onCareerPathNext) {
+        onCareerPathNext();
+      } else {
+        alert("No Career Path Planning flow is available.");
+      }
+      return;
     } else if (featureTitle === "Learning Path Creation") {
       onSelectObjective("team-productivity");
+      // Optionally, you can call onNext here if needed for Learning Path Creation
+    } else if (featureTitle === "Upskill for New Role") {
+      onSelectObjective("team-productivity");
+      if (onNext) onNext();
+      return;
     }
     if (!isAuthenticated) {
       setShowAuth(true);
@@ -147,9 +162,11 @@ const ObjectiveSelection = ({
                           ? "bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 cursor-pointer hover:shadow-md"
                           : "bg-gray-50 cursor-default"
                       }`}
-                      onClick={feature.active && feature.title === "Upskill for New Role"
-                        ? handleUpskillClick
-                        : undefined}
+                      onClick={
+                        feature.active && (feature.title === "Career Path Planning" || feature.title === "Upskill for New Role" || feature.title === "Learning Path Creation")
+                          ? () => handleActiveFeatureClick(feature.title)
+                          : undefined
+                      }
                     >
                       <div className="flex items-center space-x-2">
                         <span className="text-base">{feature.icon}</span>

@@ -60,10 +60,20 @@ const Analysis = () => {
 
   const handleObjectiveSelect = (objective: string) => {
     setSelectedObjective(objective);
-    // Auto-advance to next step
-    setTimeout(() => {
-      handleNext();
-    }, 500);
+    // Only auto-advance for upskill/other objectives
+    if (objective !== "innovation") {
+      setTimeout(() => {
+        handleNext();
+      }, 500);
+    }
+  };
+
+  // Handler for Career Path Planning flow
+  const handleCareerPathNext = () => {
+    // Option 1: Navigate to CareerAnalysis page (recommended)
+    navigate("/career-analysis");
+    // Option 2: Or, if you want to set a special step, you can do:
+    // setCurrentStep(100); // or any step number for career path flow
   };
 
   const handleRoleSelect = (roleId: string, roleName: string) => {
@@ -128,6 +138,7 @@ const Analysis = () => {
             selectedObjective={selectedObjective}
             onSelectObjective={handleObjectiveSelect}
             onBack={handleBack}
+            onCareerPathNext={handleCareerPathNext}
           />
         );
       case 2:

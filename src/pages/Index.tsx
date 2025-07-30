@@ -118,6 +118,19 @@ const Index = () => {
       });
       if (!response.ok) throw new Error("Login failed");
       localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("userEmail", email);
+      // Fetch company name after login
+      try {
+        const companyRes = await fetch(`http://localhost:3000/api/v1/user/company?email=${encodeURIComponent(email)}`);
+        if (companyRes.ok) {
+          const companyData = await companyRes.json();
+          if (companyData && companyData.company) {
+            localStorage.setItem("companyName", companyData.company);
+          }
+        }
+      } catch (e) {
+        // Optionally handle error or ignore
+      }
       setShowAuthModal(false);
       window.location.href = "/dashboard";
     } catch (err) {
@@ -137,6 +150,15 @@ const Index = () => {
   const [showDemo, setShowDemo] = useState(false);
   const [showContactUs, setShowContactUs] = useState(false);
   const [showVideoDemo, setShowVideoDemo] = useState(false);
+
+  // Company name state for display after login
+  const [companyName, setCompanyName] = useState<string | null>(null);
+
+  useEffect(() => {
+    // On mount, check if companyName is in localStorage and set it
+    const storedCompany = localStorage.getItem("companyName");
+    if (storedCompany) setCompanyName(storedCompany);
+  }, []);
 
   const [contactForm, setContactForm] = useState({
     name: "",
@@ -320,6 +342,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-blue-50">
+      {/* Show company name if available */}
+      {companyName && (
+        <div className="w-full bg-blue-50 text-blue-900 text-center py-2 font-semibold text-lg shadow-sm">
+          Company: {companyName}
+        </div>
+      )}
       {/* Modern Navigation */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-sm">
         <div className="w-full bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-sm">
