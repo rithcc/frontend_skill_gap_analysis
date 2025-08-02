@@ -7,7 +7,25 @@ import { Upload, FileText, Plus, Trash2, Brain, Zap, BarChart3, ChevronRight, Ey
 interface ResumeUploadProps {
   onNext?: () => void;
   onBack?: () => void;
+  requirementSessionId?: string; // Pass this from parent when starting a new requirement
 }
+
+const RESUME_SESSION_KEY = 'requirementSessionId';
+
+const clearResumeState = () => {
+  localStorage.removeItem('resumeUploadFilesMeta');
+  localStorage.removeItem('resumeProcessedFiles');
+  localStorage.removeItem('combinedResumeText');
+  localStorage.removeItem('individualResumeTexts');
+  localStorage.removeItem('structuredResumeData');
+  localStorage.removeItem('resumeMetadata');
+  localStorage.removeItem('totalResumeCount');
+  localStorage.removeItem('successfulExtractions');
+  localStorage.removeItem('selectedResumeIndex');
+  localStorage.removeItem('showEmployeeSkillCard');
+  localStorage.removeItem('resumeProcessingComplete');
+  localStorage.removeItem('resumeProcessingTimestamp');
+};
 
 interface ProcessedFile {
   file: File;
@@ -19,65 +37,57 @@ interface ProcessedFile {
 
 
 
+
 // Define a lightweight file metadata type for persistence
 type FileMeta = { name: string; size: number; type: string };
 
-const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
+const ResumeUpload = ({ onNext, onBack, requirementSessionId }: ResumeUploadProps) => {
+  useEffect(() => {
+    // Check if requirementSessionId has changed
+    const prevSessionId = localStorage.getItem(RESUME_SESSION_KEY);
+    if (requirementSessionId && requirementSessionId !== prevSessionId) {
+      // New requirement started, clear all resume state
+      clearResumeState();
+      localStorage.setItem(RESUME_SESSION_KEY, requirementSessionId);
+      setUploadedFiles([]);
+      setProcessedFiles([]);
+      setSelectedResumeIndex(null);
+      setCombinedResumeText('');
+      return;
+    } else if (requirementSessionId && !prevSessionId) {
+      // First time, set the session key
+      localStorage.setItem(RESUME_SESSION_KEY, requirementSessionId);
+    }
+
+    // Restore resumes from localStorage
+    const filesMeta = localStorage.getItem('resumeUploadFilesMeta');
+    const processedFilesMeta = localStorage.getItem('resumeProcessedFiles');
+    const combinedText = localStorage.getItem('combinedResumeText');
+    const selectedIdx = localStorage.getItem('selectedResumeIndex');
+
+    if (filesMeta) {
+      try {
+        setUploadedFiles(JSON.parse(filesMeta));
+      } catch (e) { /* ignore */ }
+    }
+    if (processedFilesMeta) {
+      try {
+        setProcessedFiles(JSON.parse(processedFilesMeta));
+      } catch (e) { /* ignore */ }
+    }
+    if (combinedText) {
+      setCombinedResumeText(combinedText);
+    }
+    if (selectedIdx) {
+      setSelectedResumeIndex(Number(selectedIdx));
+    }
+  }, [requirementSessionId]);
   const [uploadedFiles, setUploadedFiles] = useState<FileMeta[]>([]);
   const [processedFiles, setProcessedFiles] = useState<(Omit<ProcessedFile, 'file'> & { file: FileMeta })[]>([]);
   const [selectedResumeIndex, setSelectedResumeIndex] = useState<number | null>(null);
   const [combinedResumeText, setCombinedResumeText] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Restore uploadedFiles and processedFiles from localStorage on mount
-  useEffect(() => {
-    // Restore uploadedFiles
-    const uploadedMeta = localStorage.getItem('resumeUploadFilesMeta');
-    let restoredFiles: FileMeta[] = [];
-    if (uploadedMeta) {
-      try {
-        const metaArr: FileMeta[] = JSON.parse(uploadedMeta);
-        if (Array.isArray(metaArr)) {
-          restoredFiles = metaArr.map((meta) => ({
-            name: meta.name,
-            size: meta.size,
-            type: meta.type || '',
-          }));
-        }
-      } catch (e) {
-        console.error('Failed to parse resumeUploadFilesMeta from localStorage', e);
-      }
-    }
-    setUploadedFiles(restoredFiles);
-
-    // Restore processedFiles
-    const processedRaw = localStorage.getItem('resumeProcessedFiles');
-    if (processedRaw) {
-      try {
-        type StoredProcessedFile = {
-          file: FileMeta;
-          extractedText: string | null;
-          isProcessing: boolean;
-          originalApiResponse?: Record<string, unknown>;
-        };
-        const arr: StoredProcessedFile[] = JSON.parse(processedRaw);
-        if (Array.isArray(arr)) {
-          setProcessedFiles(arr.map((pf) => ({
-            file: {
-              name: pf.file?.name,
-              size: pf.file?.size,
-              type: pf.file?.type || '',
-            },
-            extractedText: pf.extractedText,
-            isProcessing: false,
-            originalApiResponse: pf.originalApiResponse,
-          })));
-        }
-      } catch (e) {
-        console.error('Failed to parse resumeProcessedFiles from localStorage', e);
-      }
-    }
-  }, []);
 
   const sendResumeToServer = async (file: File, fileName: string) => {
     try {
@@ -549,7 +559,7 @@ const ResumeUpload = ({ onNext, onBack }: ResumeUploadProps) => {
                             {file.name}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {(file.size / 1024 / 1024).toFixed(2)} MB • 
+                            {typeof file.size === 'number' && !isNaN(file.size) ? (file.size / 1024 / 1024).toFixed(2) : '0.00'} MB • 
                             {isProcessing ? ' Processing...' : hasText ? ' Resume processed' : ' Ready for processing'}
                           </p>
                         </div>

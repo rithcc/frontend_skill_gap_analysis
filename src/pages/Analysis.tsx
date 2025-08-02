@@ -33,8 +33,15 @@ const Analysis = () => {
   const [requirementChoice, setRequirementChoice] = useState<
     "have" | "define" | null
   >(null);
+  // Add requirementSessionId state to control resume clearing
+  const [requirementSessionId, setRequirementSessionId] = useState<string>(() => Date.now().toString());
+
 
   const handleNext = () => {
+    // If navigating to ResumeUpload (step 6) from any step except 7 or 8, regenerate sessionId
+    if (currentStep + 1 === 6 && currentStep !== 5 && currentStep !== 7 && currentStep !== 8) {
+      setRequirementSessionId(Date.now().toString());
+    }
     if (currentStep < 13) {
       setCurrentStep(currentStep + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -44,11 +51,17 @@ const Analysis = () => {
   const handleBack = () => {
     // Special case: if on AnalysisProgress (step 8), always go to ResumeUpload (step 6)
     if (currentStep === 8) {
+      // Regenerate sessionId when going back to ResumeUpload from AnalysisProgress
+      setRequirementSessionId(Date.now().toString());
       setCurrentStep(6);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     if (currentStep > 1) {
+      // If going back to ResumeUpload (step 6) from any step except 7 or 8, regenerate sessionId
+      if (currentStep - 1 === 6 && currentStep !== 7 && currentStep !== 8) {
+        setRequirementSessionId(Date.now().toString());
+      }
       setCurrentStep(currentStep - 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
@@ -118,11 +131,7 @@ const Analysis = () => {
     console.log(
       "Document upload completed, set requirementsSource to uploaded_document"
     );
-
-    // Auto-advance to next step when upload is complete
-    setTimeout(() => {
-      handleNext();
-    }, 500);
+    // Do NOT auto-advance to next step here. Navigation will be handled by the Generate Requirement button click in UploadRequirement.
   };
 
   const handleGenerateReport = () => {
@@ -171,10 +180,15 @@ const Analysis = () => {
         return (
           <GeneratedRequirements onNext={handleNext} onBack={handleBack} />
         );
+
       case 5:
         return (
           <RequirementsBuilder
-            onNext={handleNext}
+            onNext={() => {
+              // Generate a new session ID when starting a new requirement
+              setRequirementSessionId(Date.now().toString());
+              handleNext();
+            }}
             onBack={handleBack}
             selectedRoleId={selectedRoleId ?? undefined}
             selectedRoleName={selectedRoleName ?? undefined}
@@ -193,6 +207,7 @@ const Analysis = () => {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             onBack={handleBack}
+            requirementSessionId={requirementSessionId}
           />
         );
 

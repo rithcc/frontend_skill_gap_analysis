@@ -66,12 +66,11 @@ const Index = () => {
     domain: "creamcollar.com",
   });
 
-  const handleAuthSignup = async (e) => {
+  const handleAuthSignup = (e) => {
     e.preventDefault();
     setAuthLoading(true);
     setAuthError("");
-    const { firstName, lastName, company, email, password, domain } =
-      authSignupForm;
+    const { firstName, lastName, company, email, password, domain } = authSignupForm;
     if (!firstName || !lastName || !company || !email || !password) {
       setAuthError("All fields are required");
       setAuthLoading(false);
@@ -83,24 +82,16 @@ const Index = () => {
       setAuthLoading(false);
       return;
     }
-    try {
-      const response = await fetch("http://localhost:3000/api/v1/user/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, company, email, password }),
-      });
-      if (!response.ok) throw new Error("Signup failed");
-      localStorage.setItem("isAuthenticated", "true");
-      setShowAuthModal(false);
-      window.location.href = "/dashboard";
-    } catch (err) {
-      setAuthError("Signup failed");
-    } finally {
-      setAuthLoading(false);
-    }
+    // Simulate signup success
+    localStorage.setItem("isAuthenticated", "true");
+    localStorage.setItem("userEmail", email);
+    localStorage.setItem("companyName", company);
+    setShowAuthModal(false);
+    window.location.href = "/dashboard";
+    setAuthLoading(false);
   };
 
-  const handleAuthLogin = async (e) => {
+  const handleAuthLogin = (e) => {
     e.preventDefault();
     setAuthLoading(true);
     setAuthError("");
@@ -110,34 +101,14 @@ const Index = () => {
       setAuthLoading(false);
       return;
     }
-    try {
-      const response = await fetch("http://localhost:3000/api/v1/user/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!response.ok) throw new Error("Login failed");
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userEmail", email);
-      // Fetch company name after login
-      try {
-        const companyRes = await fetch(`http://localhost:3000/api/v1/user/company?email=${encodeURIComponent(email)}`);
-        if (companyRes.ok) {
-          const companyData = await companyRes.json();
-          if (companyData && companyData.company) {
-            localStorage.setItem("companyName", companyData.company);
-          }
-        }
-      } catch (e) {
-        // Optionally handle error or ignore
-      }
-      setShowAuthModal(false);
-      window.location.href = "/dashboard";
-    } catch (err) {
-      setAuthError("Login failed");
-    } finally {
-      setAuthLoading(false);
-    }
+    // Simulate login success
+    localStorage.setItem("isAuthenticated", "true");
+    localStorage.setItem("userEmail", email);
+    // Optionally set companyName to a placeholder
+    localStorage.setItem("companyName", "Demo Company");
+    setShowAuthModal(false);
+    window.location.href = "/dashboard";
+    setAuthLoading(false);
   };
   console.log("Index component is rendering..."); // Debug log
   useEffect(() => {
@@ -342,12 +313,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-blue-50">
-      {/* Show company name if available */}
-      {companyName && (
-        <div className="w-full bg-blue-50 text-blue-900 text-center py-2 font-semibold text-lg shadow-sm">
-          Company: {companyName}
-        </div>
-      )}
+      {/* Company name is stored in localStorage but not shown in UI */}
       {/* Modern Navigation */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-sm">
         <div className="w-full bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-sm">

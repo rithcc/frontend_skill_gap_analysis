@@ -31,14 +31,46 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [showTeamMembers, setShowTeamMembers] = useState(false);
   const [showTrackAnalysis, setShowTrackAnalysis] = useState(false);
+  const [companyName, setCompanyName] = useState<string | null>(null);
+  interface TeamMember {
+    firstName?: string;
+    lastName?: string;
+    name?: string;
+    fullName?: string;
+    employeeName?: string;
+    role?: string;
+    // Add other fields as needed
+  }
+  const [members, setMembers] = useState<TeamMember[]>([]);
 
-  // Dummy data for team members and previous analyses
-  const teamMembers = [
-    { name: "John Smith", role: "Frontend Developer", avatar: "JS", color: "bg-blue-500" },
-    { name: "Sarah Johnson", role: "Senior React Developer", avatar: "SJ", color: "bg-green-500" },
-    { name: "Michael King", role: "Backend Developer", avatar: "MK", color: "bg-purple-500" },
-    // ...add more members as needed
-  ];
+  useEffect(() => {
+    // Get company name from localStorage on mount
+    const storedCompany = localStorage.getItem("companyName");
+    if (storedCompany) setCompanyName(storedCompany);
+  }, []);
+
+  useEffect(() => {
+    // Fetch team members if companyName is available
+    if (!companyName) return;
+    const fetchMembers = async () => {
+      try {
+        const res = await fetch(`http://localhost:3000/api/v1/user/members?company=${encodeURIComponent(companyName)}`);
+        if (res.ok) {
+          const data = await res.json();
+          // Expecting data.members to be an array of member objects
+          setMembers(Array.isArray(data.members) ? data.members : []);
+        } else {
+          setMembers([]);
+        }
+      } catch {
+        setMembers([]);
+      }
+    };
+    fetchMembers();
+  }, [companyName]);
+
+  // Team members from API (fallback to empty array)
+  const teamMembers = members;
 
   const previousAnalyses = [
     {
@@ -113,7 +145,7 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="mb-4 animate-fade-in">
           <h2 className="text-3xl font-bold text-gray-900 mb-1">
-            Welcome Back Cream Collar! 👋
+            {`Welcome Back${companyName ? ` ${companyName}` : ''}! 👋`}
           </h2>
         </div>
 
@@ -128,14 +160,34 @@ const Dashboard = () => {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Team Size</p>
-                <p className="text-2xl font-bold text-blue-900 mt-1">24</p>
+                <p className="text-2xl font-bold text-blue-900 mt-1">{teamMembers.length}</p>
                 <p className="text-xs text-blue-600 mt-1">Active Members - Click to view</p>
                 <div className="flex items-center mt-2">
                   <div className="flex -space-x-2">
-                    <div className="w-7 h-7 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold">JS</div>
-                    <div className="w-7 h-7 bg-green-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold">SJ</div>
-                    <div className="w-7 h-7 bg-purple-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold">MK</div>
-                    <div className="w-7 h-7 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center text-xs text-white font-bold">+21</div>
+                    {teamMembers.slice(0, 3).map((member, idx) => {
+                      // Avatar: first letter of firstName + first letter of lastName (if present)
+                      let initials = '';
+                      if (member.firstName && member.lastName) {
+                        initials = `${member.firstName[0] || ''}${member.lastName[0] || ''}`.toUpperCase();
+                      } else if (member.firstName) {
+                        initials = member.firstName[0].toUpperCase();
+                      } else if (member.name) {
+                        // fallback: use first two non-space letters of name
+                        initials = member.name.replace(/\s+/g, '').substring(0, 2).toUpperCase();
+                      }
+                      const colors = ["bg-blue-500", "bg-green-500", "bg-purple-500", "bg-orange-500", "bg-pink-500"];
+                      const color = colors[idx % colors.length];
+                      return (
+                        <div key={idx} className={`w-7 h-7 ${color} rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold`}>
+                          {initials}
+                        </div>
+                      );
+                    })}
+                    {teamMembers.length > 3 && (
+                      <div className="w-7 h-7 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center text-xs text-white font-bold">
+                        +{teamMembers.length - 3}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -262,21 +314,39 @@ const Dashboard = () => {
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
                 <Users className="w-6 h-6 text-blue-600" />
-                Team Members (24)
+                Team Members ({teamMembers.length})
               </DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              {teamMembers.map((member, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className={`w-9 h-9 ${member.color} rounded-full flex items-center justify-center text-white font-bold text-xs`}>
-                    {member.avatar}
+              {teamMembers.map((member, index) => {
+                // Compose name from available fields
+                let name = member.name || member.fullName || member.employeeName || '';
+                if (!name && (member.firstName || member.lastName)) {
+                  name = `${member.firstName || ''} ${member.lastName || ''}`.trim();
+                }
+                // Avatar: first letter of firstName + first letter of lastName (if present)
+                let initials = '';
+                if (member.firstName && member.lastName) {
+                  initials = `${member.firstName[0] || ''}${member.lastName[0] || ''}`.toUpperCase();
+                } else if (member.firstName) {
+                  initials = member.firstName[0].toUpperCase();
+                } else if (name) {
+                  initials = name.replace(/\s+/g, '').substring(0, 2).toUpperCase();
+                }
+                const colors = ["bg-blue-500", "bg-green-500", "bg-purple-500", "bg-orange-500", "bg-pink-500"];
+                const color = colors[index % colors.length];
+                return (
+                  <div key={index} className={`flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors`}>
+                    <div className={`w-9 h-9 ${color} rounded-full flex items-center justify-center text-white font-bold text-xs`}>
+                      {initials}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 text-sm">{name}</h4>
+                      {member.role && <p className="text-xs text-gray-600">{member.role}</p>}
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 text-sm">{member.name}</h4>
-                    <p className="text-xs text-gray-600">{member.role}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </DialogContent>
         </Dialog>

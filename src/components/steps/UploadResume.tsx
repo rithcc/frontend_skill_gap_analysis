@@ -1,14 +1,11 @@
-
-
-
-
 'use client';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 interface ResumeUploadProps {
   onNext?: () => void;
   onBack?: () => void;
 }
+
 
 export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -17,6 +14,16 @@ export default function ResumeUpload({ onNext, onBack }: ResumeUploadProps) {
   const [currentResumeText, setCurrentResumeText] = useState<string | null>(null);
   const [combinedResumeText, setCombinedResumeText] = useState<string>('');
   const [extractedTexts, setExtractedTexts] = useState<string[]>([]);
+
+  // Clear all resume state and localStorage on mount
+  useEffect(() => {
+    setUploadedFiles([]);
+    setCurrentResumeText(null);
+    setCombinedResumeText('');
+    setExtractedTexts([]);
+    localStorage.removeItem('combinedResumeText');
+    localStorage.removeItem('individualResumeTexts');
+  }, []);
 
   const sendResumeToServer = async (file: File, fileName: string) => {
     try {

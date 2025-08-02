@@ -73,7 +73,7 @@ export default function UploadRequirements({
 
       try {
         const response = await fetch(
-          "http://localhost:3000/api/v1/upload-requirements/upload",
+          "http://localhost:8001/extract-requirements",
           {
             method: "POST",
             body: formData,
@@ -87,17 +87,15 @@ export default function UploadRequirements({
         const result = await response.json();
         console.log("Extracted data:", result);
 
-        // Ensure the structure matches the API contract
-        const uploadData = {
-          id: result.id,
-          originalName: result.originalName,
-          fileSize: result.fileSize,
-          status: result.status,
-          createdAt: result.createdAt,
-          requirements: result.requirements
-        };
-        localStorage.setItem("selectedRole", JSON.stringify(uploadData));
+
+        // Store only the requirements object in localStorage as 'selectedRole' for downstream use
+        if (result.requirements) {
+          localStorage.setItem("selectedRole", JSON.stringify(result.requirements));
+        }
         localStorage.setItem("requirementsSource", "uploaded_document");
+        if (result.id) {
+          localStorage.setItem("documentId", result.id);
+        }
 
         // ✅ Ensure callback exists and is called safely
         onUploadComplete?.();
@@ -226,25 +224,17 @@ export default function UploadRequirements({
                   </p>
                 </div>
               </div>
-              <button
-                className="text-red-600 hover:text-red-800 transition-colors"
-                onClick={() => setSelectedFile(null)}
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
+              {/* Delete button removed as requested */}
             </div>
+          )}
+          {/* Show Generate Requirement Button only if a file is uploaded */}
+          {selectedFile && (
+            <button
+              className="mt-6 px-6 py-2 bg-blue-400 text-white rounded-lg font-semibold shadow cursor-not-allowed opacity-60"
+              disabled
+            >
+              Generate Requirement
+            </button>
           )}
         </div>
       </main>
